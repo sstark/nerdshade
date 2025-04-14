@@ -54,6 +54,7 @@ func TimeRatio(from, to time.Time, dur time.Duration) float64 {
 	}
 	timeDiff := to.Sub(from)
 	ratio := (dur.Seconds() - timeDiff.Seconds()) / dur.Seconds()
+	slog.Debug("timeratio", "timeDiff", timeDiff, "ratio", ratio)
 	return math.Min(roundFloat(ratio, 3), 1.0)
 }
 
@@ -63,6 +64,7 @@ func TimeRatio(from, to time.Time, dur time.Duration) float64 {
 func BrightnessLevel(when, sunrise, sunset time.Time) float64 {
 	// Night
 	if when.Before(sunrise) || when == sunrise || when.After(sunset) || when == sunset {
+		slog.Info("it is night")
 		return 0.0
 	}
 	// Sunrise
@@ -81,6 +83,7 @@ func BrightnessLevel(when, sunrise, sunset time.Time) float64 {
 func GetLocalBrightness(when time.Time, location Location) float64 {
 	latitude, longitude := location.Coords()
 	rise, set := sunrise.SunriseSunset(latitude, longitude, when.Year(), when.Month(), when.Day())
+	slog.Debug("calculated sun times", "sunrise", rise, "sunset", set, "location", location)
 	return BrightnessLevel(when, rise.Local(), set.Local())
 }
 
@@ -88,6 +91,6 @@ func main() {
 	slog.SetLogLoggerLevel(slog.LevelDebug)
 	now := time.Now()
 	location := NewLocation()
-	slog.Debug("starting", "localtime", now, "location", location)
+	slog.Debug("starting", "localtime", now)
 	fmt.Printf("brightness: %f\n", GetLocalBrightness(now, location))
 }
