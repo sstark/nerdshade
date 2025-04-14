@@ -29,7 +29,7 @@ func TestRoundFloat(t *testing.T) {
 }
 
 type TimeRatioTestCase struct {
-	label string
+	label    string
 	from     time.Time
 	to       time.Time
 	dur      time.Duration
@@ -53,14 +53,14 @@ func TestTimeRatio(t *testing.T) {
 			0.0,
 		},
 		{
-		    "Inside correct interval",
+			"Inside correct interval",
 			time.Date(2025, time.April, 15, 17, 27, 0, 0, time.Local),
 			time.Date(2025, time.April, 15, 17, 58, 0, 0, time.Local),
 			time.Hour,
 			0.483,
 		},
 		{
-	        "Same times, but longer reference interval",
+			"Same times, but longer reference interval",
 			time.Date(2025, time.April, 15, 17, 27, 0, 0, time.Local),
 			time.Date(2025, time.April, 15, 17, 58, 0, 0, time.Local),
 			time.Hour * 2,
@@ -89,15 +89,13 @@ func TestTimeRatio(t *testing.T) {
 }
 
 type BrightnessLevelTestCase struct {
-	label	string
+	label    string
 	t        time.Time
 	loc      Location
 	expected float64
 }
 
 func TestBrightnessLevel(t *testing.T) {
-	// These test cases rely upon the calculated rise/set values of the used sunrise package to be stable.
-	// Should those ever change, the tests could potentially fail.
 	tests := []BrightnessLevelTestCase{
 		{
 			"Before sunset",
