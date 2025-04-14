@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log/slog"
 	"math"
 	"time"
@@ -92,5 +91,10 @@ func main() {
 	now := time.Now()
 	location := NewLocation()
 	slog.Debug("starting", "localtime", now)
-	fmt.Printf("brightness: %f\n", GetLocalBrightness(now, location))
+	brightness := GetLocalBrightness(now, location)
+	slog.Info("local brightness", "brightness", brightness)
+	err := SetHyprsunset(brightness)
+	if err != nil {
+		slog.Warn("error setting brightness", "err", err)
+	}
 }
