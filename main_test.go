@@ -148,3 +148,25 @@ func TestBrightnessLevel(t *testing.T) {
 		}
 	}
 }
+
+func TestGetLocalBrightness(t *testing.T) {
+	tests := []BrightnessLevelTestCase{
+		{
+			"In the middle of sunset",
+			time.Date(2025, time.April, 15, 19, 30, 0, 0, time.Local),
+			NewLocation(),
+			0.272,
+		},
+		{
+			"Right after sunset",
+			time.Date(2025, time.April, 15, 20, 14, 0, 0, time.Local),
+			NewLocation(),
+			0.0,
+		},
+	}
+	for _, test := range tests {
+		if result := GetLocalBrightness(test.t, test.loc); result != test.expected {
+			t.Errorf("Case(%s): Brightness level %f not equal to expected %f", test.label, result, test.expected)
+		}
+	}
+}
