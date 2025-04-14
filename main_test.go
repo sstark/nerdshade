@@ -3,6 +3,8 @@ package main
 import (
 	"testing"
 	"time"
+
+	"github.com/nathan-osman/go-sunrise"
 )
 
 type roundFloatTestCase struct {
@@ -141,7 +143,9 @@ func TestBrightnessLevel(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		if result := BrightnessLevel(test.t, test.loc); result != test.expected {
+		lat, lon := test.loc.Coords()
+		rise, set := sunrise.SunriseSunset(lat, lon, test.t.Year(), test.t.Month(), test.t.Day())
+		if result := BrightnessLevel(test.t, rise, set); result != test.expected {
 			t.Errorf("Case(%s): Brightness level %f not equal to expected %f", test.label, result, test.expected)
 		}
 	}
