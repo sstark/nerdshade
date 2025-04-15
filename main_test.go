@@ -3,6 +3,7 @@ package main
 import (
 	"io"
 	"log/slog"
+	"strconv"
 	"testing"
 	"time"
 
@@ -27,10 +28,13 @@ func TestRoundFloat(t *testing.T) {
 		{3.14, 0, 3},
 		{3.9, 0, 4},
 	}
-	for _, test := range tests {
-		if result := roundFloat(test.in, test.precision); result != test.expected {
-			t.Errorf("Rounded value %f not equal to expected %f", result, test.expected)
-		}
+	for i, test := range tests {
+		t.Log(i)
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			if result := roundFloat(test.in, test.precision); result != test.expected {
+				t.Errorf("Rounded value %f not equal to expected %f", result, test.expected)
+			}
+		})
 	}
 }
 
@@ -81,9 +85,12 @@ func TestTimeRatio(t *testing.T) {
 		},
 	}
 	for label, test := range tests {
-		if result := TimeRatio(test.from, test.to, test.dur); result != test.expected {
-			t.Errorf("Case(%s): Ratio %f not equal to expected %f", label, result, test.expected)
-		}
+		t.Log(label)
+		t.Run(label, func(t *testing.T) {
+			if result := TimeRatio(test.from, test.to, test.dur); result != test.expected {
+				t.Errorf("Ratio %f not equal to expected %f", result, test.expected)
+			}
+		})
 	}
 }
 
@@ -132,11 +139,14 @@ func TestBrightnessLevel(t *testing.T) {
 		},
 	}
 	for label, test := range tests {
-		lat, lon := test.loc.Coords()
-		rise, set := sunrise.SunriseSunset(lat, lon, test.t.Year(), test.t.Month(), test.t.Day())
-		if result := BrightnessLevel(test.t, rise, set); result != test.expected {
-			t.Errorf("Case(%s): Brightness level %f not equal to expected %f", label, result, test.expected)
-		}
+		t.Log(label)
+		t.Run(label, func(t *testing.T) {
+			lat, lon := test.loc.Coords()
+			rise, set := sunrise.SunriseSunset(lat, lon, test.t.Year(), test.t.Month(), test.t.Day())
+			if result := BrightnessLevel(test.t, rise, set); result != test.expected {
+				t.Errorf("Brightness level %f not equal to expected %f", result, test.expected)
+			}
+		})
 	}
 }
 
@@ -154,8 +164,11 @@ func TestGetLocalBrightness(t *testing.T) {
 		},
 	}
 	for label, test := range tests {
-		if result := GetLocalBrightness(test.t, test.loc); result != test.expected {
-			t.Errorf("Case(%s): Brightness level %f not equal to expected %f", label, result, test.expected)
-		}
+		t.Log(label)
+		t.Run(label, func(t *testing.T) {
+			if result := GetLocalBrightness(test.t, test.loc); result != test.expected {
+				t.Errorf("Brightness level %f not equal to expected %f", result, test.expected)
+			}
+		})
 	}
 }
