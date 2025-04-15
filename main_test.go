@@ -1,11 +1,17 @@
 package main
 
 import (
+	"io"
+	"log/slog"
 	"testing"
 	"time"
 
 	"github.com/nathan-osman/go-sunrise"
 )
+
+func TestMain(t *testing.T) {
+	slog.SetDefault(slog.New(slog.NewTextHandler(io.Discard, nil)))
+}
 
 type roundFloatTestCase struct {
 	in        float64
