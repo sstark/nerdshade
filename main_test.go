@@ -35,7 +35,6 @@ func TestRoundFloat(t *testing.T) {
 }
 
 type TimeRatioTestCase struct {
-	label    string
 	from     time.Time
 	to       time.Time
 	dur      time.Duration
@@ -43,136 +42,120 @@ type TimeRatioTestCase struct {
 }
 
 func TestTimeRatio(t *testing.T) {
-	tests := []TimeRatioTestCase{
-		{
-			"Equal From To",
+	tests := map[string]TimeRatioTestCase{
+		"Equal From To": {
 			time.Date(2025, time.April, 15, 17, 27, 0, 0, time.Local),
 			time.Date(2025, time.April, 15, 17, 27, 0, 0, time.Local),
 			time.Hour,
 			1.0,
 		},
-		{
-			"Exactly 100%",
+		"Exactly 100%": {
 			time.Date(2025, time.April, 15, 17, 27, 0, 0, time.Local),
 			time.Date(2025, time.April, 15, 18, 27, 0, 0, time.Local),
 			time.Hour,
 			0.0,
 		},
-		{
-			"Inside correct interval",
+		"Inside correct interval": {
 			time.Date(2025, time.April, 15, 17, 27, 0, 0, time.Local),
 			time.Date(2025, time.April, 15, 17, 58, 0, 0, time.Local),
 			time.Hour,
 			0.483,
 		},
-		{
-			"Same times, but longer reference interval",
+		"Same times, but longer reference interval": {
 			time.Date(2025, time.April, 15, 17, 27, 0, 0, time.Local),
 			time.Date(2025, time.April, 15, 17, 58, 0, 0, time.Local),
 			time.Hour * 2,
 			0.742,
 		},
-		{
-			"To is before From",
+		"To is before From": {
 			time.Date(2025, time.April, 15, 17, 27, 0, 0, time.Local),
 			time.Date(2025, time.April, 15, 13, 12, 0, 0, time.Local),
 			time.Hour,
 			0.0,
 		},
-		{
-			"To is after From, but outside interval",
+		"To is after From, but outside interval": {
 			time.Date(2025, time.April, 15, 17, 27, 0, 0, time.Local),
 			time.Date(2025, time.April, 15, 18, 46, 0, 0, time.Local),
 			time.Hour,
 			1.0,
 		},
 	}
-	for _, test := range tests {
+	for label, test := range tests {
 		if result := TimeRatio(test.from, test.to, test.dur); result != test.expected {
-			t.Errorf("Case(%s): Ratio %f not equal to expected %f", test.label, result, test.expected)
+			t.Errorf("Case(%s): Ratio %f not equal to expected %f", label, result, test.expected)
 		}
 	}
 }
 
 type BrightnessLevelTestCase struct {
-	label    string
 	t        time.Time
 	loc      Location
 	expected float64
 }
 
 func TestBrightnessLevel(t *testing.T) {
-	tests := []BrightnessLevelTestCase{
-		{
-			"Before sunset",
+	tests := map[string]BrightnessLevelTestCase{
+		"Before sunset": {
 			time.Date(2025, time.April, 15, 17, 27, 0, 0, time.Local),
 			NewLocation(),
 			1.0,
 		},
-		{
-			"In the middle of sunset",
+		"In the middle of sunset": {
 			time.Date(2025, time.April, 15, 19, 30, 0, 0, time.Local),
 			NewLocation(),
 			0.272,
 		},
-		{
-			"Towards the end of sunset",
+		"Towards the end of sunset": {
 			time.Date(2025, time.April, 14, 20, 5, 0, 0, time.Local),
 			NewLocation(),
 			0.880,
 		},
-		{
-			"Right before end of sunset",
+		"Right before end of sunset": {
 			time.Date(2025, time.April, 14, 20, 11, 0, 0, time.Local),
 			NewLocation(),
 			0.980,
 		},
-		{
-			"Right after sunset",
+		"Right after sunset": {
 			time.Date(2025, time.April, 15, 20, 14, 0, 0, time.Local),
 			NewLocation(),
 			0.0,
 		},
-		{
-			"Right before sunrise",
+		"Right before sunrise": {
 			time.Date(2025, time.April, 16, 6, 15, 0, 0, time.Local),
 			NewLocation(),
 			0.0,
 		},
-		{
-			"Sun has almost risen",
+		"Sun has almost risen": {
 			time.Date(2025, time.April, 16, 7, 25, 0, 0, time.Local),
 			NewLocation(),
 			0.900,
 		},
 	}
-	for _, test := range tests {
+	for label, test := range tests {
 		lat, lon := test.loc.Coords()
 		rise, set := sunrise.SunriseSunset(lat, lon, test.t.Year(), test.t.Month(), test.t.Day())
 		if result := BrightnessLevel(test.t, rise, set); result != test.expected {
-			t.Errorf("Case(%s): Brightness level %f not equal to expected %f", test.label, result, test.expected)
+			t.Errorf("Case(%s): Brightness level %f not equal to expected %f", label, result, test.expected)
 		}
 	}
 }
 
 func TestGetLocalBrightness(t *testing.T) {
-	tests := []BrightnessLevelTestCase{
-		{
-			"In the middle of sunset",
+	tests := map[string]BrightnessLevelTestCase{
+		"In the middle of sunset": {
 			time.Date(2025, time.April, 15, 19, 30, 0, 0, time.Local),
 			NewLocation(),
 			0.272,
 		},
-		{
-			"Right after sunset",
+		"Right after sunset": {
 			time.Date(2025, time.April, 15, 20, 14, 0, 0, time.Local),
 			NewLocation(),
 			0.0,
 		},
 	}
-	for _, test := range tests {
+	for label, test := range tests {
 		if result := GetLocalBrightness(test.t, test.loc); result != test.expected {
-			t.Errorf("Case(%s): Brightness level %f not equal to expected %f", test.label, result, test.expected)
+			t.Errorf("Case(%s): Brightness level %f not equal to expected %f", label, result, test.expected)
 		}
 	}
 }
