@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log/slog"
 	"math"
 	"time"
@@ -13,9 +14,18 @@ type Location struct {
 	Longitude float64
 }
 
+type Config struct {
+	Debug   bool
+	Help    bool
+	MinTemp int
+	MaxTemp int
+}
+
 const (
 	DefaultLatitude    = 48.516
 	DefaultLongitude   = 9.120
+	DefaultMinTemp = 4000
+	DefaultMaxTemp = 6500
 	TransitionDuration = time.Hour
 )
 
@@ -86,20 +96,31 @@ func GetLocalBrightness(when time.Time, location Location) float64 {
 	return BrightnessLevel(when, rise.Local(), set.Local())
 }
 
-func BrightnessToTemperature(brightness float64) int {
-	min := 4000.0
-	max := 6500.0
-	return int(((max-min) * brightness) + min)
+func BrightnessToTemperature(brightness float64, min, max int) int {
+	return int(((float64(max) - float64(min)) * brightness) + float64(min))
+}
+
+// GetFlags creates and returns a new config object from command line flags
+func GetFlags() Config {
+	c := Config{}
+	flag.BoolVar(&(c.Debug), "debug", false, "Print debug info")
+	flag.IntVar(&(c.MinTemp), "min", DefaultMinTemp, "Minimum color temperature")
+	flag.IntVar(&(c.MaxTemp), "max", DefaultMaxTemp, "Maximum color temperature")
+	flag.Parse()
+	return c
 }
 
 func main() {
-	slog.SetLogLoggerLevel(slog.LevelDebug)
+	cflags := GetFlags()
+	if cflags.Debug {
+		slog.SetLogLoggerLevel(slog.LevelDebug)
+	}
 	now := time.Now()
 	location := NewLocation()
 	slog.Debug("starting", "localtime", now)
 	brightness := GetLocalBrightness(now, location)
 	slog.Info("local brightness", "brightness", brightness)
-	err := SetHyprsunset(BrightnessToTemperature(brightness))
+	err := SetHyprsunset(BrightnessToTemperature(brightness, cflags.MinTemp, cflags.MaxTemp))
 	if err != nil {
 		slog.Warn("error setting brightness", "err", err)
 	}
