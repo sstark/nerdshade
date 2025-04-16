@@ -19,11 +19,12 @@ func Shellout(command string) (string, string, error) {
 }
 
 // SetHyprsunset contacts a running Hyprland session by calling hyprctl
-func SetHyprsunset(brightness float64) error {
+func SetHyprsunset(temperature int) error {
 	// Unfortunately hyprctl will not write an error to stderr nor return != 0 if
 	// supplied with wrong arguments. In the hope this will change we still
 	// check properly.
-	stdout, stderr, err := Shellout(fmt.Sprintf("hyprctl hyprsunset temperature %s", "4000"))
+	slog.Debug("running hyprctl", "temperature", temperature)
+	stdout, stderr, err := Shellout(fmt.Sprintf("hyprctl hyprsunset temperature %d", temperature))
 	if stderr != "" {
 		slog.Warn("hyprctl", "stderr", stderr)
 	}

@@ -86,6 +86,12 @@ func GetLocalBrightness(when time.Time, location Location) float64 {
 	return BrightnessLevel(when, rise.Local(), set.Local())
 }
 
+func BrightnessToTemperature(brightness float64) int {
+	min := 4000.0
+	max := 6500.0
+	return int(((max-min) * brightness) + min)
+}
+
 func main() {
 	slog.SetLogLoggerLevel(slog.LevelDebug)
 	now := time.Now()
@@ -93,7 +99,7 @@ func main() {
 	slog.Debug("starting", "localtime", now)
 	brightness := GetLocalBrightness(now, location)
 	slog.Info("local brightness", "brightness", brightness)
-	err := SetHyprsunset(brightness)
+	err := SetHyprsunset(BrightnessToTemperature(brightness))
 	if err != nil {
 		slog.Warn("error setting brightness", "err", err)
 	}
