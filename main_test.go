@@ -96,7 +96,6 @@ func TestTimeRatio(t *testing.T) {
 
 type BrightnessLevelTestCase struct {
 	t        time.Time
-	loc      Location
 	expected float64
 }
 
@@ -104,45 +103,37 @@ func TestBrightnessLevel(t *testing.T) {
 	tests := map[string]BrightnessLevelTestCase{
 		"Before sunset": {
 			time.Date(2025, time.April, 15, 17, 27, 0, 0, time.Local),
-			NewLocation(),
 			1.0,
 		},
 		"In the middle of sunset": {
 			time.Date(2025, time.April, 15, 19, 30, 0, 0, time.Local),
-			NewLocation(),
 			0.272,
 		},
 		"Towards the end of sunset": {
 			time.Date(2025, time.April, 14, 20, 5, 0, 0, time.Local),
-			NewLocation(),
 			0.880,
 		},
 		"Right before end of sunset": {
 			time.Date(2025, time.April, 14, 20, 11, 0, 0, time.Local),
-			NewLocation(),
 			0.980,
 		},
 		"Right after sunset": {
 			time.Date(2025, time.April, 15, 20, 14, 0, 0, time.Local),
-			NewLocation(),
 			0.0,
 		},
 		"Right before sunrise": {
 			time.Date(2025, time.April, 16, 6, 15, 0, 0, time.Local),
-			NewLocation(),
 			0.0,
 		},
 		"Sun has almost risen": {
 			time.Date(2025, time.April, 16, 7, 25, 0, 0, time.Local),
-			NewLocation(),
 			0.900,
 		},
 	}
 	for label, test := range tests {
 		t.Log(label)
 		t.Run(label, func(t *testing.T) {
-			lat, lon := test.loc.Coords()
-			rise, set := sunrise.SunriseSunset(lat, lon, test.t.Year(), test.t.Month(), test.t.Day())
+			rise, set := sunrise.SunriseSunset(DefaultLatitude, DefaultLongitude, test.t.Year(), test.t.Month(), test.t.Day())
 			if result := BrightnessLevel(test.t, rise, set); result != test.expected {
 				t.Errorf("Brightness level %f not equal to expected %f", result, test.expected)
 			}
@@ -154,19 +145,17 @@ func TestGetLocalBrightness(t *testing.T) {
 	tests := map[string]BrightnessLevelTestCase{
 		"In the middle of sunset": {
 			time.Date(2025, time.April, 15, 19, 30, 0, 0, time.Local),
-			NewLocation(),
 			0.272,
 		},
 		"Right after sunset": {
 			time.Date(2025, time.April, 15, 20, 14, 0, 0, time.Local),
-			NewLocation(),
 			0.0,
 		},
 	}
 	for label, test := range tests {
 		t.Log(label)
 		t.Run(label, func(t *testing.T) {
-			if result := GetLocalBrightness(test.t, test.loc); result != test.expected {
+			if result := GetLocalBrightness(test.t, DefaultLatitude, DefaultLongitude); result != test.expected {
 				t.Errorf("Brightness level %f not equal to expected %f", result, test.expected)
 			}
 		})
@@ -196,7 +185,7 @@ func TestBrightnessToTemperature(t *testing.T) {
 	for label, test := range tests {
 		t.Log(label)
 		t.Run(label, func(t *testing.T) {
-			if result := BrightnessToTemperature(test.brightness); result != test.expected {
+			if result := BrightnessToTemperature(test.brightness, DefaultMinTemp, DefaultMaxTemp); result != test.expected {
 				t.Errorf("Mapping to temperature %d not equal to expected %d", result, test.expected)
 			}
 		})

@@ -119,7 +119,9 @@ func MainLoop(cflags Config, now time.Time) {
 	signal.Notify(sigc, syscall.SIGTERM)
 	signal.Notify(sigc, syscall.SIGINT)
 	ticker := time.NewTicker(DefaultLoopInterval)
+	slog.Debug("loop timing", "interval", DefaultLoopInterval)
 	quit := make(chan bool)
+	GetAndSetBrightness(cflags, now)
 	for {
 		select {
 		case <-ticker.C:
