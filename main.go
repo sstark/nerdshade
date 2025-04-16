@@ -4,6 +4,9 @@ import (
 	"flag"
 	"log/slog"
 	"math"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/nathan-osman/go-sunrise"
@@ -16,14 +19,16 @@ type Config struct {
 	MaxTemp   int
 	Latitude  float64
 	Longitude float64
+	Loop      bool
 }
 
 const (
-	DefaultLatitude    = 48.516
-	DefaultLongitude   = 9.120
-	DefaultMinTemp     = 4000
-	DefaultMaxTemp     = 6500
-	TransitionDuration = time.Hour
+	DefaultLatitude     = 48.516
+	DefaultLongitude    = 9.120
+	DefaultMinTemp      = 4000
+	DefaultMaxTemp      = 6500
+	DefaultLoopInterval = time.Second * 30
+	TransitionDuration  = time.Hour
 )
 
 // roundFloat rounds a float to the given precision
@@ -60,7 +65,7 @@ func TimeRatio(from, to time.Time, dur time.Duration) float64 {
 func BrightnessLevel(when, sunrise, sunset time.Time) float64 {
 	// Night
 	if when.Before(sunrise) || when == sunrise || when.After(sunset) || when == sunset {
-		slog.Info("it is night")
+		slog.Debug("it is night")
 		return 0.0
 	}
 	// Sunrise
@@ -94,16 +99,43 @@ func GetFlags() Config {
 	flag.IntVar(&(c.MaxTemp), "max", DefaultMaxTemp, "Maximum color temperature")
 	flag.Float64Var(&(c.Latitude), "latitude", DefaultLatitude, "Your location latitude")
 	flag.Float64Var(&(c.Longitude), "longitude", DefaultLongitude, "Your location longitude")
+	flag.BoolVar(&(c.Loop), "loop", false, "Run nerdshade continuously")
 	flag.Parse()
 	return c
 }
 
-func MainLoop(cflags Config, now time.Time) {
+func GetAndSetBrightness(cflags Config, now time.Time) {
 	brightness := GetLocalBrightness(now, cflags.Latitude, cflags.Longitude)
-	slog.Info("local brightness", "brightness", brightness)
+	slog.Debug("local brightness", "brightness", brightness)
 	err := SetHyprsunset(BrightnessToTemperature(brightness, cflags.MinTemp, cflags.MaxTemp))
 	if err != nil {
 		slog.Warn("error setting brightness", "err", err)
+	}
+}
+
+func MainLoop(cflags Config, now time.Time) {
+	slog.Info("running continuously")
+	sigc := make(chan os.Signal, 1)
+	signal.Notify(sigc, syscall.SIGTERM)
+	signal.Notify(sigc, syscall.SIGINT)
+	ticker := time.NewTicker(DefaultLoopInterval)
+	quit := make(chan bool)
+	for {
+		select {
+		case <-ticker.C:
+			// TODO: use ticker.Reset(interval) here to dynamically adjust ticker
+			// interval. We only need to wake up when needed.
+			// GetAndSetBrightness could simply return a time.Duration until the next
+			// expected change.
+			GetAndSetBrightness(cflags, now)
+		case sig := <-sigc:
+			slog.Debug("main loop received signal", "signal", sig)
+			go func() { quit <- true }()
+		case <-quit:
+			ticker.Stop()
+			slog.Debug("main loop quit")
+			return
+		}
 	}
 }
 
@@ -113,6 +145,11 @@ func main() {
 		slog.SetLogLoggerLevel(slog.LevelDebug)
 	}
 	now := time.Now()
+	// TODO: Factor out to a function that returns a useful value to the OS.
 	slog.Debug("starting", "localtime", now)
-	MainLoop(cflags, now)
+	if cflags.Loop {
+		MainLoop(cflags, now)
+	} else {
+		GetAndSetBrightness(cflags, now)
+	}
 }
