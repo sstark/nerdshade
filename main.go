@@ -104,8 +104,8 @@ func GetFlags() Config {
 	return c
 }
 
-func GetAndSetBrightness(cflags Config, now time.Time) {
-	brightness := GetLocalBrightness(now, cflags.Latitude, cflags.Longitude)
+func GetAndSetBrightness(cflags Config, when time.Time) {
+	brightness := GetLocalBrightness(when, cflags.Latitude, cflags.Longitude)
 	slog.Debug("local brightness", "brightness", brightness)
 	err := SetHyprsunset(BrightnessToTemperature(brightness, cflags.MinTemp, cflags.MaxTemp))
 	if err != nil {
@@ -113,7 +113,7 @@ func GetAndSetBrightness(cflags Config, now time.Time) {
 	}
 }
 
-func MainLoop(cflags Config, now time.Time) {
+func MainLoop(cflags Config, cl clock) {
 	slog.Info("running continuously")
 	sigc := make(chan os.Signal, 1)
 	signal.Notify(sigc, syscall.SIGTERM)
@@ -121,7 +121,7 @@ func MainLoop(cflags Config, now time.Time) {
 	ticker := time.NewTicker(DefaultLoopInterval)
 	slog.Debug("loop timing", "interval", DefaultLoopInterval)
 	quit := make(chan bool)
-	GetAndSetBrightness(cflags, now)
+	GetAndSetBrightness(cflags, cl.Now())
 	for {
 		select {
 		case <-ticker.C:
@@ -129,7 +129,7 @@ func MainLoop(cflags Config, now time.Time) {
 			// interval. We only need to wake up when needed.
 			// GetAndSetBrightness could simply return a time.Duration until the next
 			// expected change.
-			GetAndSetBrightness(cflags, now)
+			GetAndSetBrightness(cflags, cl.Now())
 		case sig := <-sigc:
 			slog.Debug("main loop received signal", "signal", sig)
 			go func() { quit <- true }()
@@ -146,11 +146,12 @@ func main() {
 	if cflags.Debug {
 		slog.SetLogLoggerLevel(slog.LevelDebug)
 	}
-	now := time.Now()
+	cl := new(realClock)
+	now := cl.Now()
 	// TODO: Factor out to a function that returns a useful value to the OS.
 	slog.Debug("starting", "localtime", now)
 	if cflags.Loop {
-		MainLoop(cflags, now)
+		MainLoop(cflags, cl)
 	} else {
 		GetAndSetBrightness(cflags, now)
 	}
