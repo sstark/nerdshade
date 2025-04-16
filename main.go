@@ -9,35 +9,22 @@ import (
 	"github.com/nathan-osman/go-sunrise"
 )
 
-type Location struct {
+type Config struct {
+	Debug     bool
+	Help      bool
+	MinTemp   int
+	MaxTemp   int
 	Latitude  float64
 	Longitude float64
-}
-
-type Config struct {
-	Debug   bool
-	Help    bool
-	MinTemp int
-	MaxTemp int
 }
 
 const (
 	DefaultLatitude    = 48.516
 	DefaultLongitude   = 9.120
-	DefaultMinTemp = 4000
-	DefaultMaxTemp = 6500
+	DefaultMinTemp     = 4000
+	DefaultMaxTemp     = 6500
 	TransitionDuration = time.Hour
 )
-
-// Coords returns the latitude and longitude as floats
-func (loc Location) Coords() (float64, float64) {
-	return loc.Latitude, loc.Longitude
-}
-
-// NewLocation returns a new location object
-func NewLocation() Location {
-	return Location{DefaultLatitude, DefaultLongitude}
-}
 
 // roundFloat rounds a float to the given precision
 func roundFloat(val float64, precision uint) float64 {
@@ -89,10 +76,9 @@ func BrightnessLevel(when, sunrise, sunset time.Time) float64 {
 }
 
 // GetLocalBrightness returns the current brightness at given location
-func GetLocalBrightness(when time.Time, location Location) float64 {
-	latitude, longitude := location.Coords()
+func GetLocalBrightness(when time.Time, latitude, longitude float64) float64 {
 	rise, set := sunrise.SunriseSunset(latitude, longitude, when.Year(), when.Month(), when.Day())
-	slog.Debug("calculated sun times", "sunrise", rise, "sunset", set, "location", location)
+	slog.Debug("calculated sun times", "sunrise", rise, "sunset", set, "lat", latitude, "lon", longitude)
 	return BrightnessLevel(when, rise.Local(), set.Local())
 }
 
@@ -106,8 +92,19 @@ func GetFlags() Config {
 	flag.BoolVar(&(c.Debug), "debug", false, "Print debug info")
 	flag.IntVar(&(c.MinTemp), "min", DefaultMinTemp, "Minimum color temperature")
 	flag.IntVar(&(c.MaxTemp), "max", DefaultMaxTemp, "Maximum color temperature")
+	flag.Float64Var(&(c.Latitude), "latitude", DefaultLatitude, "Your location latitude")
+	flag.Float64Var(&(c.Longitude), "longitude", DefaultLongitude, "Your location longitude")
 	flag.Parse()
 	return c
+}
+
+func MainLoop(cflags Config, now time.Time) {
+	brightness := GetLocalBrightness(now, cflags.Latitude, cflags.Longitude)
+	slog.Info("local brightness", "brightness", brightness)
+	err := SetHyprsunset(BrightnessToTemperature(brightness, cflags.MinTemp, cflags.MaxTemp))
+	if err != nil {
+		slog.Warn("error setting brightness", "err", err)
+	}
 }
 
 func main() {
@@ -116,12 +113,6 @@ func main() {
 		slog.SetLogLoggerLevel(slog.LevelDebug)
 	}
 	now := time.Now()
-	location := NewLocation()
 	slog.Debug("starting", "localtime", now)
-	brightness := GetLocalBrightness(now, location)
-	slog.Info("local brightness", "brightness", brightness)
-	err := SetHyprsunset(BrightnessToTemperature(brightness, cflags.MinTemp, cflags.MaxTemp))
-	if err != nil {
-		slog.Warn("error setting brightness", "err", err)
-	}
+	MainLoop(cflags, now)
 }
