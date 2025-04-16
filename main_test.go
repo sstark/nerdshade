@@ -29,7 +29,6 @@ func TestRoundFloat(t *testing.T) {
 		{3.9, 0, 4},
 	}
 	for i, test := range tests {
-		t.Log(i)
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			if result := roundFloat(test.in, test.precision); result != test.expected {
 				t.Errorf("Rounded value %f not equal to expected %f", result, test.expected)
@@ -85,7 +84,6 @@ func TestTimeRatio(t *testing.T) {
 		},
 	}
 	for label, test := range tests {
-		t.Log(label)
 		t.Run(label, func(t *testing.T) {
 			if result := TimeRatio(test.from, test.to, test.dur); result != test.expected {
 				t.Errorf("Ratio %f not equal to expected %f", result, test.expected)
@@ -131,7 +129,6 @@ func TestBrightnessLevel(t *testing.T) {
 		},
 	}
 	for label, test := range tests {
-		t.Log(label)
 		t.Run(label, func(t *testing.T) {
 			rise, set := sunrise.SunriseSunset(DefaultLatitude, DefaultLongitude, test.t.Year(), test.t.Month(), test.t.Day())
 			if result := BrightnessLevel(test.t, rise, set); result != test.expected {
@@ -153,7 +150,6 @@ func TestGetLocalBrightness(t *testing.T) {
 		},
 	}
 	for label, test := range tests {
-		t.Log(label)
 		t.Run(label, func(t *testing.T) {
 			if result := GetLocalBrightness(test.t, DefaultLatitude, DefaultLongitude); result != test.expected {
 				t.Errorf("Brightness level %f not equal to expected %f", result, test.expected)
@@ -183,7 +179,6 @@ func TestBrightnessToTemperature(t *testing.T) {
 		},
 	}
 	for label, test := range tests {
-		t.Log(label)
 		t.Run(label, func(t *testing.T) {
 			if result := BrightnessToTemperature(test.brightness, DefaultMinTemp, DefaultMaxTemp); result != test.expected {
 				t.Errorf("Mapping to temperature %d not equal to expected %d", result, test.expected)
