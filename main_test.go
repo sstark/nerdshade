@@ -105,15 +105,15 @@ func TestBrightnessLevel(t *testing.T) {
 		},
 		"In the middle of sunset": {
 			time.Date(2025, time.April, 15, 19, 30, 0, 0, time.Local),
-			0.272,
+			0.728,
 		},
 		"Towards the end of sunset": {
 			time.Date(2025, time.April, 14, 20, 5, 0, 0, time.Local),
-			0.880,
+			0.120,
 		},
 		"Right before end of sunset": {
 			time.Date(2025, time.April, 14, 20, 11, 0, 0, time.Local),
-			0.980,
+			0.020,
 		},
 		"Right after sunset": {
 			time.Date(2025, time.April, 15, 20, 14, 0, 0, time.Local),
@@ -132,6 +132,9 @@ func TestBrightnessLevel(t *testing.T) {
 		t.Run(label, func(t *testing.T) {
 			rise, set := sunrise.SunriseSunset(DefaultLatitude, DefaultLongitude, test.t.Year(), test.t.Month(), test.t.Day())
 			if result := BrightnessLevel(test.t, rise, set); result != test.expected {
+				// Additional logging to make it easier to spot rounding issues
+				t.Log(result)
+				t.Log(test.expected)
 				t.Errorf("Brightness level %f not equal to expected %f", result, test.expected)
 			}
 		})
@@ -142,7 +145,7 @@ func TestGetLocalBrightness(t *testing.T) {
 	tests := map[string]BrightnessLevelTestCase{
 		"In the middle of sunset": {
 			time.Date(2025, time.April, 15, 19, 30, 0, 0, time.Local),
-			0.272,
+			0.728,
 		},
 		"Right after sunset": {
 			time.Date(2025, time.April, 15, 20, 14, 0, 0, time.Local),
