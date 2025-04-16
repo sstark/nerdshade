@@ -37,6 +37,10 @@ func roundFloat(val float64, precision uint) float64 {
 	return math.Round(val*ratio) / ratio
 }
 
+func roundFloat3(val float64) float64 {
+	return roundFloat(val, 3)
+}
+
 // TimeRatio calculates "how much" from has reached to, relative to dur
 // Examples for dur = 1 hour:
 //
@@ -56,7 +60,7 @@ func TimeRatio(from, to time.Time, dur time.Duration) float64 {
 	timeDiff := to.Sub(from)
 	ratio := (dur.Seconds() - timeDiff.Seconds()) / dur.Seconds()
 	slog.Debug("timeratio", "timeDiff", timeDiff, "ratio", ratio)
-	return math.Min(roundFloat(ratio, 3), 1.0)
+	return math.Min(roundFloat3(ratio), 1.0)
 }
 
 // BrightnessLevel returns the brightness based on the time given
@@ -70,11 +74,11 @@ func BrightnessLevel(when, sunrise, sunset time.Time) float64 {
 	}
 	// Sunrise
 	if when.Before(sunrise.Add(TransitionDuration)) {
-		return TimeRatio(when, sunrise.Add(TransitionDuration), TransitionDuration)
+		return roundFloat3(TimeRatio(when, sunrise.Add(TransitionDuration), TransitionDuration))
 	}
 	// Sunset
 	if when.After(sunset.Add(-TransitionDuration)) && when.Before(sunset) {
-		return TimeRatio(when, sunset, TransitionDuration)
+		return roundFloat3(1.0 - TimeRatio(when, sunset, TransitionDuration))
 	}
 	// Day
 	return 1.0
