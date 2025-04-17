@@ -38,7 +38,7 @@ It's still in development, so installation is a bit rough:
 Make sure you have hyprsunset running.
 
 - Clone repository
-- `go test`
+- `TZ=CET go test`
 - `go build`
 - `mkdir -p ~/bin`        # adjust
 - `cp nerdshade ~/bin`    # adjust
