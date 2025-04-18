@@ -8,20 +8,18 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
-
-	"github.com/nathan-osman/go-sunrise"
 )
 
 type Config struct {
-	Debug     bool
-	Help      bool
-	NightTemp int
-	DayTemp   int
+	Debug      bool
+	Help       bool
+	NightTemp  int
+	DayTemp    int
 	NightGamma int
-	DayGamma int
-	Latitude  float64
-	Longitude float64
-	Loop      bool
+	DayGamma   int
+	Latitude   float64
+	Longitude  float64
+	Loop       bool
 }
 
 const (
@@ -29,8 +27,8 @@ const (
 	DefaultLongitude    = 9.120
 	DefaultNightTemp    = 4000
 	DefaultDayTemp      = 6500
-	DefaultNightGamma = 90
-	DefaultDayGamma = 100
+	DefaultNightGamma   = 90
+	DefaultDayGamma     = 100
 	DefaultLoopInterval = time.Second * 30
 	TransitionDuration  = time.Hour
 )
@@ -67,40 +65,6 @@ func TimeRatio(from, to time.Time, dur time.Duration) float64 {
 	return math.Min(roundFloat3(ratio), 1.0)
 }
 
-// BrightnessLevel returns the brightness based on the time given
-// ranging from 0.0 to 1.0.
-// sunrise and sunset times need to be supplied.
-func BrightnessLevel(when, sunrise, sunset time.Time) float64 {
-	// Night
-	if when.Before(sunrise) || when == sunrise || when.After(sunset) || when == sunset {
-		slog.Debug("it is night")
-		return 0.0
-	}
-	// Sunrise
-	if when.Before(sunrise.Add(TransitionDuration)) {
-		return roundFloat3(TimeRatio(when, sunrise.Add(TransitionDuration), TransitionDuration))
-	}
-	// Sunset
-	if when.After(sunset.Add(-TransitionDuration)) && when.Before(sunset) {
-		return roundFloat3(1.0 - TimeRatio(when, sunset, TransitionDuration))
-	}
-	// Day
-	return 1.0
-}
-
-// GetLocalBrightness returns the current brightness at given location
-func GetLocalBrightness(when time.Time, latitude, longitude float64) float64 {
-	rise, set := sunrise.SunriseSunset(latitude, longitude, when.Year(), when.Month(), when.Day())
-	slog.Debug("calculated sun times", "sunrise", rise, "sunset", set, "lat", latitude, "lon", longitude)
-	return BrightnessLevel(when, rise.Local(), set.Local())
-}
-
-// ScaleBrightness scales the given brightness value to min/max
-// Use this for calculating temperature and gamma values from the brightness level
-func ScaleBrightness(brightness float64, min, max int) int {
-	return int(((float64(max) - float64(min)) * brightness) + float64(min))
-}
-
 // GetFlags creates and returns a new config object from command line flags
 func GetFlags() Config {
 	c := Config{}
@@ -116,6 +80,8 @@ func GetFlags() Config {
 	return c
 }
 
+// GetAndSetBrightness gets the local brightness, gets scaled values for temperature
+// and gamma and sets those in hyprland.
 func GetAndSetBrightness(cflags Config, when time.Time) {
 	brightness := GetLocalBrightness(when, cflags.Latitude, cflags.Longitude)
 	slog.Debug("local brightness", "brightness", brightness)
