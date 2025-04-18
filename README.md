@@ -18,6 +18,7 @@ Can be run in one-shot mode (default) or in a loop.
 ```
 $ ./nerdshade -h
 Usage of ./nerdshade:
+  -V    Show program version
   -debug
         Print debug info
   -gammaDay int
