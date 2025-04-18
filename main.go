@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log/slog"
 	"math"
 	"os"
@@ -20,6 +21,7 @@ type Config struct {
 	Latitude   float64
 	Longitude  float64
 	Loop       bool
+	Version    bool
 }
 
 const (
@@ -76,6 +78,7 @@ func GetFlags() Config {
 	flag.Float64Var(&(c.Latitude), "latitude", DefaultLatitude, "Your location latitude")
 	flag.Float64Var(&(c.Longitude), "longitude", DefaultLongitude, "Your location longitude")
 	flag.BoolVar(&(c.Loop), "loop", false, "Run nerdshade continuously")
+	flag.BoolVar(&(c.Version), "V", false, "Show program version")
 	flag.Parse()
 	return c
 }
@@ -127,6 +130,10 @@ func MainLoop(cflags Config, cl clock) {
 
 func main() {
 	cflags := GetFlags()
+	if cflags.Version {
+		fmt.Println(Version)
+		os.Exit(0)
+	}
 	if cflags.Debug {
 		slog.SetLogLoggerLevel(slog.LevelDebug)
 	}
