@@ -30,9 +30,9 @@ func Hyprctl(cmd, subcmd string, val int) error {
 	slog.Debug("running hyprctl", subcmd, val)
 	stdout, stderr, err := Shellout(fmt.Sprintf("%s hyprsunset %s %d", cmd, subcmd, val))
 	if stderr != "" {
-		slog.Warn("hyprctl", "stderr", stderr)
+		slog.Warn("hyprctl", "subcmd", subcmd, "stderr", stderr)
 	}
-	slog.Debug("hyprctl", "stdout", stdout)
+	slog.Debug("hyprctl", "subcmd", subcmd, "stdout", stdout)
 	return err
 }
 
