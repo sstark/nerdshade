@@ -1,8 +1,5 @@
 ## nerdshade
 
-> [!WARNING]
-> Early development stage
-
 Calculates outside brightness based on location and local time.
 
 Brightness value transitions smoothly for an hour during sunrise and sunset.
@@ -39,14 +36,17 @@ Usage of ./nerdshade:
 
 ## Installation
 
-It's still in development, so installation is a bit rough:
-
 Make sure you have hyprsunset running.
 
-- Clone repository
-- `TZ=CET go test`
-- `go build`
-- `mkdir -p ~/bin`        # adjust
-- `cp nerdshade ~/bin`    # adjust
+Download the latest binary from releases, place it somwhere in `$PATH` and start it. Example:
+
+- (download)
+- `cp nerdshade-linux-x84_64 ~/.local/bin/nerdshade`
 - `hyprctl keyword exec hyprsunset`    # if not yet running
-- `hyprctl keyword exec "nerdshade -loop"`
+- `hyprctl keyword exec "nerdshade -loop"` # adjust
+
+## Building
+
+- Clone repository
+- `TZ=CET go test` # optional
+- `go build`
