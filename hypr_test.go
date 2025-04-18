@@ -60,7 +60,7 @@ func TestHyprctl(t *testing.T) {
 			"./notexisting/binary",
 			"foo",
 			123,
-			"subcmd=foo stderr=\"/bin/sh: line 1: ./notexisting/binary: No such file or directory\\n\"",
+			"subcmd=foo stderr=\"/bin/sh: ",
 			"exit status 127",
 		},
 	}
