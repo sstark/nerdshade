@@ -42,6 +42,7 @@ Download the latest binary from releases, place it somwhere in `$PATH` and start
 
 - (download)
 - `cp nerdshade-linux-x84_64 ~/.local/bin/nerdshade`
+- `chmod +x ~/.local/bin/nerdshade`
 - `hyprctl keyword exec hyprsunset`    # if not yet running
 - `hyprctl keyword exec "nerdshade -loop"` # adjust
 
