@@ -96,7 +96,7 @@ func GetLocalBrightness(when time.Time, latitude, longitude float64) float64 {
 }
 
 // ScaleBrightness scales the given brightness value to min/max
-// Use this for calculating temperatur and gamma values from the brightness level
+// Use this for calculating temperature and gamma values from the brightness level
 func ScaleBrightness(brightness float64, min, max int) int {
 	return int(((float64(max) - float64(min)) * brightness) + float64(min))
 }
@@ -107,6 +107,8 @@ func GetFlags() Config {
 	flag.BoolVar(&(c.Debug), "debug", false, "Print debug info")
 	flag.IntVar(&(c.NightTemp), "tempNight", DefaultNightTemp, "Night color temperature")
 	flag.IntVar(&(c.DayTemp), "tempDay", DefaultDayTemp, "Day color temperature")
+	flag.IntVar(&(c.NightGamma), "gammaNight", DefaultNightGamma, "Night gamma")
+	flag.IntVar(&(c.DayGamma), "gammaDay", DefaultDayGamma, "Day gamma")
 	flag.Float64Var(&(c.Latitude), "latitude", DefaultLatitude, "Your location latitude")
 	flag.Float64Var(&(c.Longitude), "longitude", DefaultLongitude, "Your location longitude")
 	flag.BoolVar(&(c.Loop), "loop", false, "Run nerdshade continuously")
@@ -117,10 +119,15 @@ func GetFlags() Config {
 func GetAndSetBrightness(cflags Config, when time.Time) {
 	brightness := GetLocalBrightness(when, cflags.Latitude, cflags.Longitude)
 	slog.Debug("local brightness", "brightness", brightness)
-	newBrightness := ScaleBrightness(brightness, cflags.NightTemp, cflags.DayTemp)
-	err := SetHyprsunset(newBrightness)
+	newTemperature := ScaleBrightness(brightness, cflags.NightTemp, cflags.DayTemp)
+	newGamma := ScaleBrightness(brightness, cflags.NightGamma, cflags.DayGamma)
+	err := SetHyprsunsetTemperature(newTemperature)
 	if err != nil {
-		slog.Warn("error setting brightness", "err", err)
+		slog.Warn("error setting temperature", "err", err)
+	}
+	err = SetHyprsunsetGamma(newGamma)
+	if err != nil {
+		slog.Warn("error setting gamma", "err", err)
 	}
 }
 

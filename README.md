@@ -16,19 +16,24 @@ Can be run in one-shot mode (default) or in a loop.
 ## Usage
 
 ```
+$ ./nerdshade -h
 Usage of ./nerdshade:
   -debug
         Print debug info
+  -gammaDay int
+        Day gamma (default 100)
+  -gammaNight int
+        Night gamma (default 90)
   -latitude float
         Your location latitude (default 48.516)
   -longitude float
         Your location longitude (default 9.12)
   -loop
         Run nerdshade continuously
-  -max int
-        Maximum color temperature (default 6500)
-  -min int
-        Minimum color temperature (default 4000)
+  -tempDay int
+        Day color temperature (default 6500)
+  -tempNight int
+        Night color temperature (default 4000)
 ```
 
 ## Installation

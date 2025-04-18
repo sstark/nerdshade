@@ -18,16 +18,26 @@ func Shellout(command string) (string, string, error) {
 	return stdout.String(), stderr.String(), err
 }
 
-// SetHyprsunset contacts a running Hyprland session by calling hyprctl
-func SetHyprsunset(temperature int) error {
+// Hyprctl calls hyprctl to set either temperatur or gamma
+func Hyprctl(subcmd string, val int) error {
 	// Unfortunately hyprctl will not write an error to stderr nor return != 0 if
 	// supplied with wrong arguments. In the hope this will change we still
 	// check properly.
-	slog.Debug("running hyprctl", "temperature", temperature)
-	stdout, stderr, err := Shellout(fmt.Sprintf("hyprctl hyprsunset temperature %d", temperature))
+	slog.Debug("running hyprctl", subcmd, val)
+	stdout, stderr, err := Shellout(fmt.Sprintf("hyprctl hyprsunset %s %d", subcmd, val))
 	if stderr != "" {
 		slog.Warn("hyprctl", "stderr", stderr)
 	}
 	slog.Debug("hyprctl", "stdout", stdout)
 	return err
+}
+
+// SetHyprsunset contacts a running Hyprland session to set temperature
+func SetHyprsunsetTemperature(temperature int) error {
+	return Hyprctl("temperature", temperature)
+}
+
+// SetHyprsunset contacts a running Hyprland session to set gamma
+func SetHyprsunsetGamma(gamma int) error {
+	return Hyprctl("gamma", gamma)
 }
