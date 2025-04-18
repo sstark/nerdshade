@@ -7,6 +7,10 @@ import (
 	"os/exec"
 )
 
+const (
+	HyprctlCmd = "hyprctl"
+)
+
 // Thanks https://stackoverflow.com/questions/6182369/exec-a-shell-command-in-go
 func Shellout(command string) (string, string, error) {
 	var stdout bytes.Buffer
@@ -19,12 +23,12 @@ func Shellout(command string) (string, string, error) {
 }
 
 // Hyprctl calls hyprctl to set either temperatur or gamma
-func Hyprctl(subcmd string, val int) error {
+func Hyprctl(cmd, subcmd string, val int) error {
 	// Unfortunately hyprctl will not write an error to stderr nor return != 0 if
 	// supplied with wrong arguments. In the hope this will change we still
 	// check properly.
 	slog.Debug("running hyprctl", subcmd, val)
-	stdout, stderr, err := Shellout(fmt.Sprintf("hyprctl hyprsunset %s %d", subcmd, val))
+	stdout, stderr, err := Shellout(fmt.Sprintf("%s hyprsunset %s %d", cmd, subcmd, val))
 	if stderr != "" {
 		slog.Warn("hyprctl", "stderr", stderr)
 	}
@@ -34,10 +38,10 @@ func Hyprctl(subcmd string, val int) error {
 
 // SetHyprsunset contacts a running Hyprland session to set temperature
 func SetHyprsunsetTemperature(temperature int) error {
-	return Hyprctl("temperature", temperature)
+	return Hyprctl(HyprctlCmd, "temperature", temperature)
 }
 
 // SetHyprsunset contacts a running Hyprland session to set gamma
 func SetHyprsunsetGamma(gamma int) error {
-	return Hyprctl("gamma", gamma)
+	return Hyprctl(HyprctlCmd, "gamma", gamma)
 }
