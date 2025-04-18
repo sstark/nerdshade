@@ -17,6 +17,8 @@ type Config struct {
 	Help      bool
 	NightTemp int
 	DayTemp   int
+	NightGamma int
+	DayGamma int
 	Latitude  float64
 	Longitude float64
 	Loop      bool
@@ -27,6 +29,8 @@ const (
 	DefaultLongitude    = 9.120
 	DefaultNightTemp    = 4000
 	DefaultDayTemp      = 6500
+	DefaultNightGamma = 90
+	DefaultDayGamma = 100
 	DefaultLoopInterval = time.Second * 30
 	TransitionDuration  = time.Hour
 )
@@ -91,7 +95,9 @@ func GetLocalBrightness(when time.Time, latitude, longitude float64) float64 {
 	return BrightnessLevel(when, rise.Local(), set.Local())
 }
 
-func BrightnessToTemperature(brightness float64, min, max int) int {
+// ScaleBrightness scales the given brightness value to min/max
+// Use this for calculating temperatur and gamma values from the brightness level
+func ScaleBrightness(brightness float64, min, max int) int {
 	return int(((float64(max) - float64(min)) * brightness) + float64(min))
 }
 
@@ -111,7 +117,8 @@ func GetFlags() Config {
 func GetAndSetBrightness(cflags Config, when time.Time) {
 	brightness := GetLocalBrightness(when, cflags.Latitude, cflags.Longitude)
 	slog.Debug("local brightness", "brightness", brightness)
-	err := SetHyprsunset(BrightnessToTemperature(brightness, cflags.NightTemp, cflags.DayTemp))
+	newBrightness := ScaleBrightness(brightness, cflags.NightTemp, cflags.DayTemp)
+	err := SetHyprsunset(newBrightness)
 	if err != nil {
 		slog.Warn("error setting brightness", "err", err)
 	}

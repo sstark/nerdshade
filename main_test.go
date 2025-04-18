@@ -161,29 +161,55 @@ func TestGetLocalBrightness(t *testing.T) {
 	}
 }
 
-type BrightnessToTemperatureTestcase struct {
+type ScaleBrightnessTestcase struct {
 	brightness float64
+	min int
+	max int
 	expected int
 }
 
-func TestBrightnessToTemperature(t *testing.T) {
-	tests := map[string]BrightnessToTemperatureTestcase{
-		"Min": {
+func TestScaleBrightness(t *testing.T) {
+	tests := map[string]ScaleBrightnessTestcase{
+		"Min Temp": {
 			0.0,
-			4000,
+			DefaultNightTemp,
+			DefaultDayTemp,
+			DefaultNightTemp,
 		},
-		"Medium": {
+		"Medium Temp": {
 			0.45,
+			DefaultNightTemp,
+			DefaultDayTemp,
 			5125,
 		},
-		"Max": {
+		"Max Temp": {
 			1.0,
-			6500,
+			DefaultNightTemp,
+			DefaultDayTemp,
+			DefaultDayTemp,
+		},
+		"Min Gamma": {
+			1.0,
+			DefaultNightGamma,
+			DefaultDayGamma,
+			DefaultDayGamma,
+		},
+		"Medium Gamma": {
+			0.32,
+			DefaultNightGamma,
+			DefaultDayGamma,
+			93,
+		},
+		"Max Gamma": {
+			1.0,
+			DefaultNightGamma,
+			DefaultDayGamma,
+			DefaultDayGamma,
 		},
 	}
 	for label, test := range tests {
 		t.Run(label, func(t *testing.T) {
-			if result := BrightnessToTemperature(test.brightness, DefaultNightTemp, DefaultDayTemp); result != test.expected {
+			if result := ScaleBrightness(test.brightness, test.min, test.max); result != test.expected {
 				t.Errorf("Mapping to temperature %d not equal to expected %d", result, test.expected)
 			}
 		})
