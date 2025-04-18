@@ -154,7 +154,7 @@ func TestGetLocalBrightness(t *testing.T) {
 	}
 	for label, test := range tests {
 		t.Run(label, func(t *testing.T) {
-			if result := GetLocalBrightness(test.t, DefaultLatitude, DefaultLongitude); result != test.expected {
+			if result, _ := GetLocalBrightness(test.t, DefaultLatitude, DefaultLongitude); result != test.expected {
 				t.Errorf("Brightness level %f not equal to expected %f", result, test.expected)
 			}
 		})

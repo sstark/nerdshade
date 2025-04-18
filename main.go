@@ -27,6 +27,7 @@ const (
 	DefaultLongitude    = 9.120
 	DefaultMinTemp      = 4000
 	DefaultMaxTemp      = 6500
+	// Should be reasonably small to allow for a smooth transition
 	DefaultLoopInterval = time.Second * 30
 	TransitionDuration  = time.Hour
 )
@@ -84,11 +85,36 @@ func BrightnessLevel(when, sunrise, sunset time.Time) float64 {
 	return 1.0
 }
 
-// GetLocalBrightness returns the current brightness at given location
-func GetLocalBrightness(when time.Time, latitude, longitude float64) float64 {
-	rise, set := sunrise.SunriseSunset(latitude, longitude, when.Year(), when.Month(), when.Day())
+// GetLocalBrightness returns the current brightness at given location, as well as
+// duration until when the next change is expected.
+func GetLocalBrightness(when time.Time, latitude, longitude float64) (float64, time.Duration) {
+	var rise, set time.Time
+	todayRise, todaySet := sunrise.SunriseSunset(latitude, longitude, when.Year(), when.Month(), when.Day())
+	if when.After(todaySet) {
+		// Get tomorrows rise/set in case we are past sunset already
+		rise, set = sunrise.SunriseSunset(latitude, longitude, when.Year(), when.Month(), when.Add(time.Hour * 24).Day())
+	} else {
+		rise, set = todayRise, todaySet
+	}
 	slog.Debug("calculated sun times", "sunrise", rise, "sunset", set, "lat", latitude, "lon", longitude)
-	return BrightnessLevel(when, rise.Local(), set.Local())
+	level := BrightnessLevel(when, rise.Local(), set.Local())
+	// Calculate times to wait for the next transition with a generous buffer of at
+	// least one default interval. We do not want to miss the beginning of a transition
+	// because the clock was off for a few seconds.
+	bufferBeforeTransition := (DefaultLoopInterval + time.Second * 5)
+	switch {
+	case level == 0.0:
+		{
+			slog.Debug("waiting for sunrise", "buffer", bufferBeforeTransition)
+			return level, rise.Sub(when) - bufferBeforeTransition
+		}
+	case level == 1.0:
+		{
+			slog.Debug("waiting for sunset", "buffer", bufferBeforeTransition)
+			return level, set.Sub(when.Add(-TransitionDuration)) - bufferBeforeTransition
+		}
+	}
+	return level, DefaultLoopInterval
 }
 
 func BrightnessToTemperature(brightness float64, min, max int) int {
@@ -108,13 +134,14 @@ func GetFlags() Config {
 	return c
 }
 
-func GetAndSetBrightness(cflags Config, when time.Time) {
-	brightness := GetLocalBrightness(when, cflags.Latitude, cflags.Longitude)
+func GetAndSetBrightness(cflags Config, when time.Time) time.Duration {
+	brightness, waitTime := GetLocalBrightness(when, cflags.Latitude, cflags.Longitude)
 	slog.Debug("local brightness", "brightness", brightness)
 	err := SetHyprsunset(BrightnessToTemperature(brightness, cflags.MinTemp, cflags.MaxTemp))
 	if err != nil {
 		slog.Warn("error setting brightness", "err", err)
 	}
+	return waitTime
 }
 
 func MainLoop(cflags Config, cl clock) {
@@ -133,7 +160,9 @@ func MainLoop(cflags Config, cl clock) {
 			// interval. We only need to wake up when needed.
 			// GetAndSetBrightness could simply return a time.Duration until the next
 			// expected change.
-			GetAndSetBrightness(cflags, cl.Now())
+			timeWait := GetAndSetBrightness(cflags, cl.Now())
+			slog.Debug("wait for next transition", "wait", timeWait)
+			ticker.Reset(timeWait)
 		case sig := <-sigc:
 			slog.Debug("main loop received signal", "signal", sig)
 			go func() { quit <- true }()
