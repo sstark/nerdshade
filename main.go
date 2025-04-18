@@ -15,8 +15,8 @@ import (
 type Config struct {
 	Debug     bool
 	Help      bool
-	MinTemp   int
-	MaxTemp   int
+	NightTemp int
+	DayTemp   int
 	Latitude  float64
 	Longitude float64
 	Loop      bool
@@ -25,8 +25,8 @@ type Config struct {
 const (
 	DefaultLatitude     = 48.516
 	DefaultLongitude    = 9.120
-	DefaultMinTemp      = 4000
-	DefaultMaxTemp      = 6500
+	DefaultNightTemp    = 4000
+	DefaultDayTemp      = 6500
 	DefaultLoopInterval = time.Second * 30
 	TransitionDuration  = time.Hour
 )
@@ -99,8 +99,8 @@ func BrightnessToTemperature(brightness float64, min, max int) int {
 func GetFlags() Config {
 	c := Config{}
 	flag.BoolVar(&(c.Debug), "debug", false, "Print debug info")
-	flag.IntVar(&(c.MinTemp), "min", DefaultMinTemp, "Minimum color temperature")
-	flag.IntVar(&(c.MaxTemp), "max", DefaultMaxTemp, "Maximum color temperature")
+	flag.IntVar(&(c.NightTemp), "tempNight", DefaultNightTemp, "Night color temperature")
+	flag.IntVar(&(c.DayTemp), "tempDay", DefaultDayTemp, "Day color temperature")
 	flag.Float64Var(&(c.Latitude), "latitude", DefaultLatitude, "Your location latitude")
 	flag.Float64Var(&(c.Longitude), "longitude", DefaultLongitude, "Your location longitude")
 	flag.BoolVar(&(c.Loop), "loop", false, "Run nerdshade continuously")
@@ -111,7 +111,7 @@ func GetFlags() Config {
 func GetAndSetBrightness(cflags Config, when time.Time) {
 	brightness := GetLocalBrightness(when, cflags.Latitude, cflags.Longitude)
 	slog.Debug("local brightness", "brightness", brightness)
-	err := SetHyprsunset(BrightnessToTemperature(brightness, cflags.MinTemp, cflags.MaxTemp))
+	err := SetHyprsunset(BrightnessToTemperature(brightness, cflags.NightTemp, cflags.DayTemp))
 	if err != nil {
 		slog.Warn("error setting brightness", "err", err)
 	}

@@ -183,7 +183,7 @@ func TestBrightnessToTemperature(t *testing.T) {
 	}
 	for label, test := range tests {
 		t.Run(label, func(t *testing.T) {
-			if result := BrightnessToTemperature(test.brightness, DefaultMinTemp, DefaultMaxTemp); result != test.expected {
+			if result := BrightnessToTemperature(test.brightness, DefaultNightTemp, DefaultDayTemp); result != test.expected {
 				t.Errorf("Mapping to temperature %d not equal to expected %d", result, test.expected)
 			}
 		})
