@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os/exec"
+	"time"
 )
 
 const (
@@ -37,11 +38,28 @@ func Hyprctl(cmd, subcmd string, val int) error {
 }
 
 // SetHyprsunset contacts a running Hyprland session to set temperature
-func SetHyprsunsetTemperature(temperature int) error {
-	return Hyprctl(HyprctlCmd, "temperature", temperature)
+func SetHyprsunsetTemperature(cflags Config, temperature int) error {
+	return Hyprctl(cflags.HyprctlCmd, "temperature", temperature)
 }
 
 // SetHyprsunset contacts a running Hyprland session to set gamma
-func SetHyprsunsetGamma(gamma int) error {
-	return Hyprctl(HyprctlCmd, "gamma", gamma)
+func SetHyprsunsetGamma(cflags Config, gamma int) error {
+	return Hyprctl(cflags.HyprctlCmd, "gamma", gamma)
+}
+
+// GetAndSetBrightness gets the local brightness, gets scaled values for temperature
+// and gamma and sets those in hyprland.
+func GetAndSetBrightness(cflags Config, when time.Time) {
+	brightness := GetLocalBrightness(when, cflags.Latitude, cflags.Longitude)
+	slog.Debug("local brightness", "brightness", brightness)
+	newTemperature := ScaleBrightness(brightness, cflags.NightTemp, cflags.DayTemp)
+	newGamma := ScaleBrightness(brightness, cflags.NightGamma, cflags.DayGamma)
+	err := SetHyprsunsetTemperature(cflags, newTemperature)
+	if err != nil {
+		slog.Warn("error setting temperature", "err", err)
+	}
+	err = SetHyprsunsetGamma(cflags, newGamma)
+	if err != nil {
+		slog.Warn("error setting gamma", "err", err)
+	}
 }

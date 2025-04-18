@@ -22,6 +22,7 @@ type Config struct {
 	Longitude  float64
 	Loop       bool
 	Version    bool
+	HyprctlCmd string
 }
 
 const (
@@ -79,25 +80,9 @@ func GetFlags() Config {
 	flag.Float64Var(&(c.Longitude), "longitude", DefaultLongitude, "Your location longitude")
 	flag.BoolVar(&(c.Loop), "loop", false, "Run nerdshade continuously")
 	flag.BoolVar(&(c.Version), "V", false, "Show program version")
+	flag.StringVar(&(c.HyprctlCmd), "hyperctl", HyprctlCmd, "Path to hyperctl program")
 	flag.Parse()
 	return c
-}
-
-// GetAndSetBrightness gets the local brightness, gets scaled values for temperature
-// and gamma and sets those in hyprland.
-func GetAndSetBrightness(cflags Config, when time.Time) {
-	brightness := GetLocalBrightness(when, cflags.Latitude, cflags.Longitude)
-	slog.Debug("local brightness", "brightness", brightness)
-	newTemperature := ScaleBrightness(brightness, cflags.NightTemp, cflags.DayTemp)
-	newGamma := ScaleBrightness(brightness, cflags.NightGamma, cflags.DayGamma)
-	err := SetHyprsunsetTemperature(newTemperature)
-	if err != nil {
-		slog.Warn("error setting temperature", "err", err)
-	}
-	err = SetHyprsunsetGamma(newGamma)
-	if err != nil {
-		slog.Warn("error setting gamma", "err", err)
-	}
 }
 
 func MainLoop(cflags Config, cl clock) {
