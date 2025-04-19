@@ -12,17 +12,21 @@ import (
 )
 
 type Config struct {
-	Debug      bool
-	Help       bool
-	NightTemp  int
-	DayTemp    int
-	NightGamma int
-	DayGamma   int
-	Latitude   float64
-	Longitude  float64
-	Loop       bool
-	Version    bool
-	HyprctlCmd string
+	Debug       bool
+	Help        bool
+	NightTemp   int
+	DayTemp     int
+	NightGamma  int
+	DayGamma    int
+	Latitude    float64
+	Longitude   float64
+	Wakeup      string
+	Bedtime     string
+	WakeupTime  time.Time
+	BedtimeTime time.Time
+	Loop        bool
+	Version     bool
+	HyprctlCmd  string
 }
 
 const (
@@ -78,6 +82,8 @@ func GetFlags() Config {
 	flag.IntVar(&(c.DayGamma), "gammaDay", DefaultDayGamma, "Day gamma")
 	flag.Float64Var(&(c.Latitude), "latitude", DefaultLatitude, "Your location latitude")
 	flag.Float64Var(&(c.Longitude), "longitude", DefaultLongitude, "Your location longitude")
+	flag.StringVar(&(c.Wakeup), "fixedWakeup", "", "Wakeup time (overrides location)")
+	flag.StringVar(&(c.Bedtime), "fixedBedtime", "", "Bedtime time (overrides location)")
 	flag.BoolVar(&(c.Loop), "loop", false, "Run nerdshade continuously")
 	flag.BoolVar(&(c.Version), "V", false, "Show program version")
 	flag.StringVar(&(c.HyprctlCmd), "hyperctl", HyprctlCmd, "Path to hyperctl program")
