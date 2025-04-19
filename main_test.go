@@ -89,3 +89,24 @@ func TestTimeRatio(t *testing.T) {
 		})
 	}
 }
+
+type BothOrNoneTestCase struct {
+	a, b     string
+	expected bool
+}
+
+func TestBothOrNone(t *testing.T) {
+	tests := map[string]BothOrNoneTestCase{
+		"none":   {"", "", true},
+		"both":   {"foo", "bar", true},
+		"only a": {"foo", "", false},
+		"only b": {"", "foo", false},
+	}
+	for label, test := range tests {
+		t.Run(label, func(t *testing.T) {
+			if result := BothOrNone(test.a, test.b); result != test.expected {
+				t.Errorf("Got %v instead of %v", result, test.expected)
+			}
+		})
+	}
+}

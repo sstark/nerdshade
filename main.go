@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"log/slog"
@@ -12,17 +13,21 @@ import (
 )
 
 type Config struct {
-	Debug      bool
-	Help       bool
-	NightTemp  int
-	DayTemp    int
-	NightGamma int
-	DayGamma   int
-	Latitude   float64
-	Longitude  float64
-	Loop       bool
-	Version    bool
-	HyprctlCmd string
+	Debug       bool
+	Help        bool
+	NightTemp   int
+	DayTemp     int
+	NightGamma  int
+	DayGamma    int
+	Latitude    float64
+	Longitude   float64
+	Wakeup      string
+	Bedtime     string
+	WakeupTime  time.Time
+	BedtimeTime time.Time
+	Loop        bool
+	Version     bool
+	HyprctlCmd  string
 }
 
 const (
@@ -68,8 +73,12 @@ func TimeRatio(from, to time.Time, dur time.Duration) float64 {
 	return math.Min(roundFloat3(ratio), 1.0)
 }
 
+func BothOrNone(a, b string) bool {
+	return (a != "" && b != "") || (a == "" && b == "")
+}
+
 // GetFlags creates and returns a new config object from command line flags
-func GetFlags() Config {
+func GetFlags() (Config, error) {
 	c := Config{}
 	flag.BoolVar(&(c.Debug), "debug", false, "Print debug info")
 	flag.IntVar(&(c.NightTemp), "tempNight", DefaultNightTemp, "Night color temperature")
@@ -78,11 +87,16 @@ func GetFlags() Config {
 	flag.IntVar(&(c.DayGamma), "gammaDay", DefaultDayGamma, "Day gamma")
 	flag.Float64Var(&(c.Latitude), "latitude", DefaultLatitude, "Your location latitude")
 	flag.Float64Var(&(c.Longitude), "longitude", DefaultLongitude, "Your location longitude")
+	flag.StringVar(&(c.Wakeup), "fixedWakeup", "", "Wakeup time (overrides location)")
+	flag.StringVar(&(c.Bedtime), "fixedBedtime", "", "Bedtime time (overrides location)")
 	flag.BoolVar(&(c.Loop), "loop", false, "Run nerdshade continuously")
 	flag.BoolVar(&(c.Version), "V", false, "Show program version")
 	flag.StringVar(&(c.HyprctlCmd), "hyperctl", HyprctlCmd, "Path to hyperctl program")
 	flag.Parse()
-	return c
+	if !BothOrNone(c.Wakeup, c.Bedtime) {
+		return c, errors.New("Both, -bedtime and -wakeup need to be supplied")
+	}
+	return c, nil
 }
 
 func MainLoop(cflags Config, cl clock) {
@@ -114,13 +128,17 @@ func MainLoop(cflags Config, cl clock) {
 }
 
 func main() {
-	cflags := GetFlags()
+	cflags, err := GetFlags()
 	if cflags.Version {
 		fmt.Println(Version)
 		os.Exit(0)
 	}
 	if cflags.Debug {
 		slog.SetLogLoggerLevel(slog.LevelDebug)
+	}
+	if err != nil {
+		slog.Error("Error in flags", "error", err)
+		os.Exit(1)
 	}
 	cl := new(realClock)
 	now := cl.Now()

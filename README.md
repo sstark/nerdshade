@@ -1,8 +1,8 @@
 ## nerdshade
 
-Calculates outside brightness based on location and local time.
+Calculates outside brightness based on location and local time OR based on fixed schedule.
 
-Brightness value transitions smoothly for an hour during sunrise and sunset.
+Brightness value transitions smoothly for an hour during sunrise and sunset (or wakupe/bedtime respectively).
 
 Brightness is translated into a color temperature and handed over to [hyprsunset](https://github.com/hyprwm/hyprsunset).
 
@@ -18,10 +18,16 @@ Usage of ./nerdshade:
   -V    Show program version
   -debug
         Print debug info
+  -fixedBedtime string
+        Bedtime time (overrides location)
+  -fixedWakeup string
+        Wakeup time (overrides location)
   -gammaDay int
         Day gamma (default 100)
   -gammaNight int
         Night gamma (default 90)
+  -hyperctl string
+        Path to hyperctl program (default "hyprctl")
   -latitude float
         Your location latitude (default 48.516)
   -longitude float
