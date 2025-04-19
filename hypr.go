@@ -47,14 +47,16 @@ func SetHyprsunsetGamma(cflags Config, gamma int) error {
 	return Hyprctl(cflags.HyprctlCmd, "gamma", gamma)
 }
 
-// GetAndSetBrightness gets the local brightness, gets scaled values for temperature
+// GetAndSetBrightness gets the brightness, gets scaled values for temperature
 // and gamma and sets those in hyprland.
 func GetAndSetBrightness(cflags Config, when time.Time) {
-	brightness := GetLocalBrightness(when, cflags.Latitude, cflags.Longitude)
-	slog.Debug("local brightness", "brightness", brightness)
+	brightness, err := GetBrightness(cflags, when)
+	if err != nil {
+		slog.Warn("error getting brightness", "err", err)
+	}
 	newTemperature := ScaleBrightness(brightness, cflags.NightTemp, cflags.DayTemp)
 	newGamma := ScaleBrightness(brightness, cflags.NightGamma, cflags.DayGamma)
-	err := SetHyprsunsetTemperature(cflags, newTemperature)
+	err = SetHyprsunsetTemperature(cflags, newTemperature)
 	if err != nil {
 		slog.Warn("error setting temperature", "err", err)
 	}

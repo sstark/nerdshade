@@ -130,3 +130,43 @@ func TestScaleBrightness(t *testing.T) {
 		})
 	}
 }
+
+type ParseHourMinuteTestcase struct {
+	s                              string
+	expected_hour, expected_minute int
+	expected_err                   bool
+}
+
+func TestParseHourMinute(t *testing.T) {
+	tests := map[string]ParseHourMinuteTestcase{
+		"valid format within bounds 1": {
+			"14:23", 14, 23, false,
+		},
+		"valid format within bounds 2": {
+			"04:14", 4, 14, false,
+		},
+		"valid format within bounds 3": {
+			"9:00", 9, 0, false,
+		},
+		"valid format, minute out of bounds": {
+			"23:60", 23, 60, true,
+		},
+		"valid format, hour out of bounds": {
+			"24:20", 24, 20, true,
+		},
+	}
+	for label, test := range tests {
+		t.Run(label, func(t *testing.T) {
+			hour, minute, err := ParseHourMinute(test.s)
+			if hour != test.expected_hour {
+				t.Errorf("Got hour %d instead of expected %d for %s", hour, test.expected_hour, test.s)
+			}
+			if minute != test.expected_minute {
+				t.Errorf("Got minute %d instead of expected %d for %s", minute, test.expected_minute, test.s)
+			}
+			if (err != nil) != test.expected_err {
+				t.Errorf("Error expected? (%v) but got %v", test.expected_err, err)
+			}
+		})
+	}
+}
