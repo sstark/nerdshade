@@ -87,14 +87,14 @@ func GetFlags() (Config, error) {
 	flag.IntVar(&(c.DayGamma), "gammaDay", DefaultDayGamma, "Day gamma")
 	flag.Float64Var(&(c.Latitude), "latitude", DefaultLatitude, "Your location latitude")
 	flag.Float64Var(&(c.Longitude), "longitude", DefaultLongitude, "Your location longitude")
-	flag.StringVar(&(c.Wakeup), "fixedWakeup", "", "Wakeup time (overrides location)")
-	flag.StringVar(&(c.Bedtime), "fixedBedtime", "", "Bedtime time (overrides location)")
+	flag.StringVar(&(c.Wakeup), "fixedWakeup", "", "Wakeup time in 24-hour format, e. g. \"6:00\" (overrides location)")
+	flag.StringVar(&(c.Bedtime), "fixedBedtime", "", "Bedtime time in 24-hour format, e. g. \"22:30\" (overrides location)")
 	flag.BoolVar(&(c.Loop), "loop", false, "Run nerdshade continuously")
 	flag.BoolVar(&(c.Version), "V", false, "Show program version")
 	flag.StringVar(&(c.HyprctlCmd), "hyperctl", HyprctlCmd, "Path to hyperctl program")
 	flag.Parse()
 	if !BothOrNone(c.Wakeup, c.Bedtime) {
-		return c, errors.New("Both, -bedtime and -wakeup need to be supplied")
+		return c, errors.New("Both, -fixedBedtime and -fixedWakeup need to be supplied")
 	}
 	return c, nil
 }

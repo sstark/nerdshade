@@ -19,9 +19,9 @@ Usage of ./nerdshade:
   -debug
         Print debug info
   -fixedBedtime string
-        Bedtime time (overrides location)
+        Bedtime time in 24-hour format, e. g. "22:30" (overrides location)
   -fixedWakeup string
-        Wakeup time (overrides location)
+        Wakeup time in 24-hour format, e. g. "6:00" (overrides location)
   -gammaDay int
         Day gamma (default 100)
   -gammaNight int
