@@ -40,7 +40,15 @@ Usage of ./nerdshade:
         Night color temperature (default 4000)
 ```
 
-## Installation
+## Installation (Arch / AUR)
+
+For example with `yay`:
+
+```sh
+yay -S nerdshade
+```
+
+## Installation (Other)
 
 Make sure you have hyprsunset running.
 
