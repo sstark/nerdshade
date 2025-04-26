@@ -1,4 +1,4 @@
-## nerdshade
+## nerdshade 🕶
 
 Calculates outside brightness based on location and local time OR based on fixed schedule.
 
