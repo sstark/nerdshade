@@ -46,7 +46,7 @@ func TestBrightnessLevel(t *testing.T) {
 	for label, test := range tests {
 		t.Run(label, func(t *testing.T) {
 			rise, set := sunrise.SunriseSunset(DefaultLatitude, DefaultLongitude, test.t.Year(), test.t.Month(), test.t.Day())
-			if result := BrightnessLevel(test.t, rise, set); result != test.expected {
+			if result := BrightnessLevel(test.t, rise, set, DefaultTransitionDuration); result != test.expected {
 				// Additional logging to make it easier to spot rounding issues
 				t.Log(result)
 				t.Log(test.expected)
@@ -69,7 +69,7 @@ func TestGetLocalBrightness(t *testing.T) {
 	}
 	for label, test := range tests {
 		t.Run(label, func(t *testing.T) {
-			if result := GetLocalBrightness(test.t, DefaultLatitude, DefaultLongitude); result != test.expected {
+			if result := GetLocalBrightness(test.t, DefaultLatitude, DefaultLongitude, DefaultTransitionDuration); result != test.expected {
 				t.Errorf("Brightness level %f not equal to expected %f", result, test.expected)
 			}
 		})

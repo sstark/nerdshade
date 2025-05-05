@@ -128,6 +128,7 @@ func TestGetAndSetBrightness(t *testing.T) {
 	cflags.NightGamma = DefaultNightGamma
 	cflags.DayTemp = DefaultDayTemp
 	cflags.NightTemp = DefaultNightTemp
+	cflags.TransitionDuration = DefaultTransitionDuration
 	logOutput := new(bytes.Buffer)
 	logger := slog.New(slog.NewTextHandler(logOutput, &slog.HandlerOptions{
 		Level: slog.LevelDebug,

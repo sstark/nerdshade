@@ -6,8 +6,8 @@ fixed schedule.
 Brightness is translated into a color temperature and gamma value and handed
 over to [hyprsunset](https://github.com/hyprwm/hyprsunset).
 
-Color temperature and gamma values transition smoothly for an hour during sunrise and
-sunset (or wakupe/bedtime respectively).
+Color temperature and gamma values transition smoothly for an hour
+(configurable) during sunrise and sunset (or wakupe/bedtime respectively).
 
 Actual calculation of sunrise/sunset times is done by the [go-sunrise package](https://github.com/nathan-osman/go-sunrise).
 
@@ -41,6 +41,8 @@ Usage of ./nerdshade:
         Day color temperature (default 6500)
   -tempNight int
         Night color temperature (default 4000)
+  -transitionDuration duration
+        Duration of transition, e. g. "45m" or "1h10m" (default 1h0m0s)
 ```
 
 ## Installation (Arch / AUR)

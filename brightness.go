@@ -13,19 +13,19 @@ import (
 // BrightnessLevel returns the brightness based on the time given
 // ranging from 0.0 to 1.0.
 // sunrise and sunset times need to be supplied.
-func BrightnessLevel(when, sunrise, sunset time.Time) float64 {
+func BrightnessLevel(when, sunrise, sunset time.Time, transitionDuration time.Duration) float64 {
 	// Night
 	if when.Before(sunrise) || when == sunrise || when.After(sunset) || when == sunset {
 		slog.Debug("it is night")
 		return 0.0
 	}
 	// Sunrise
-	if when.Before(sunrise.Add(TransitionDuration)) {
-		return roundFloat3(TimeRatio(when, sunrise.Add(TransitionDuration), TransitionDuration))
+	if when.Before(sunrise.Add(transitionDuration)) {
+		return roundFloat3(TimeRatio(when, sunrise.Add(transitionDuration), transitionDuration))
 	}
 	// Sunset
-	if when.After(sunset.Add(-TransitionDuration)) && when.Before(sunset) {
-		return roundFloat3(1.0 - TimeRatio(when, sunset, TransitionDuration))
+	if when.After(sunset.Add(-transitionDuration)) && when.Before(sunset) {
+		return roundFloat3(1.0 - TimeRatio(when, sunset, transitionDuration))
 	}
 	// Day
 	return 1.0
@@ -62,15 +62,15 @@ func ParseHourMinute(hourMinute string) (hour int, minute int, err error) {
 }
 
 // GetLocalBrightness returns the current brightness at given location
-func GetLocalBrightness(when time.Time, latitude, longitude float64) float64 {
+func GetLocalBrightness(when time.Time, latitude, longitude float64, transitionDuration time.Duration) float64 {
 	rise, set := sunrise.SunriseSunset(latitude, longitude, when.Year(), when.Month(), when.Day())
 	slog.Debug("calculated sun times", "sunrise", rise, "sunset", set, "lat", latitude, "lon", longitude)
-	return BrightnessLevel(when, rise.Local(), set.Local())
+	return BrightnessLevel(when, rise.Local(), set.Local(), transitionDuration)
 }
 
 // GetScheduledBrightness( returns the current brightness based on hard schedule
 // wakeup and bedtime values will be parsed and date-completed.
-func GetScheduledBrightness(when time.Time, wakeup, bedtime string) (float64, error) {
+func GetScheduledBrightness(when time.Time, wakeup, bedtime string, transitionDuration time.Duration) (float64, error) {
 	wakeupHour, wakeupMinute, err := ParseHourMinute(wakeup)
 	if err != nil {
 		return 0.0, err
@@ -82,7 +82,7 @@ func GetScheduledBrightness(when time.Time, wakeup, bedtime string) (float64, er
 	rise := time.Date(when.Year(), when.Month(), when.Day(), wakeupHour, wakeupMinute, 0, 0, when.Location())
 	set := time.Date(when.Year(), when.Month(), when.Day(), bedtimeHour, bedtimeMinute, 0, 0, when.Location())
 	slog.Debug("scheduled wakeup/bedtime", "rise", rise, "set", set)
-	return BrightnessLevel(when, rise, set), nil
+	return BrightnessLevel(when, rise, set, transitionDuration), nil
 }
 
 // GetBrightness returns the brightness based on either location or fixed schedule,
@@ -90,10 +90,10 @@ func GetScheduledBrightness(when time.Time, wakeup, bedtime string) (float64, er
 func GetBrightness(cflags Config, when time.Time) (brightness float64, err error) {
 	if cflags.Wakeup != "" {
 		// Parameter -wakeup was supplied. User wants fixed times
-		brightness, err = GetScheduledBrightness(when, cflags.Wakeup, cflags.Bedtime)
+		brightness, err = GetScheduledBrightness(when, cflags.Wakeup, cflags.Bedtime, cflags.TransitionDuration)
 		slog.Debug("scheduled brightness", "brightness", brightness)
 	} else {
-		brightness = GetLocalBrightness(when, cflags.Latitude, cflags.Longitude)
+		brightness = GetLocalBrightness(when, cflags.Latitude, cflags.Longitude, cflags.TransitionDuration)
 		slog.Debug("local brightness", "brightness", brightness)
 	}
 	return

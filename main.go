@@ -28,6 +28,7 @@ type Config struct {
 	Loop        bool
 	Version     bool
 	HyprctlCmd  string
+	TransitionDuration time.Duration
 }
 
 const (
@@ -38,7 +39,7 @@ const (
 	DefaultNightGamma   = 90
 	DefaultDayGamma     = 100
 	DefaultLoopInterval = time.Second * 30
-	TransitionDuration  = time.Hour
+	DefaultTransitionDuration  = time.Hour
 )
 
 // roundFloat rounds a float to the given precision
@@ -92,6 +93,7 @@ func GetFlags() (Config, error) {
 	flag.BoolVar(&(c.Loop), "loop", false, "Run nerdshade continuously")
 	flag.BoolVar(&(c.Version), "V", false, "Show program version")
 	flag.StringVar(&(c.HyprctlCmd), "hyperctl", HyprctlCmd, "Path to hyperctl program")
+	flag.DurationVar(&(c.TransitionDuration), "transitionDuration", DefaultTransitionDuration, "Duration of transition, e. g. \"45m\" or \"1h10m\"")
 	flag.Parse()
 	if !BothOrNone(c.Wakeup, c.Bedtime) {
 		return c, errors.New("Both, -fixedBedtime and -fixedWakeup need to be supplied")
