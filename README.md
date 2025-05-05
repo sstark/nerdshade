@@ -1,10 +1,13 @@
 ## nerdshade 🕶
 
-Calculates outside brightness based on location and local time OR based on fixed schedule.
+Calculates outside brightness based on location and local time OR based on
+fixed schedule.
 
-Brightness value transitions smoothly for an hour during sunrise and sunset (or wakupe/bedtime respectively).
+Brightness is translated into a color temperature and gamma value and handed
+over to [hyprsunset](https://github.com/hyprwm/hyprsunset).
 
-Brightness is translated into a color temperature and handed over to [hyprsunset](https://github.com/hyprwm/hyprsunset).
+Color temperature and gamma values transition smoothly for an hour during sunrise and
+sunset (or wakupe/bedtime respectively).
 
 Actual calculation of sunrise/sunset times is done by the [go-sunrise package](https://github.com/nathan-osman/go-sunrise).
 
@@ -55,7 +58,7 @@ Make sure you have hyprsunset running.
 Download the latest binary from releases, place it somwhere in `$PATH` and start it. Example:
 
 - (download)
-- `cp nerdshade-linux-x84_64 ~/.local/bin/nerdshade`
+- `cp nerdshade ~/.local/bin/nerdshade`
 - `chmod +x ~/.local/bin/nerdshade`
 - `hyprctl keyword exec hyprsunset`    # if not yet running
 - `hyprctl keyword exec "nerdshade -loop"` # adjust
@@ -63,5 +66,5 @@ Download the latest binary from releases, place it somwhere in `$PATH` and start
 ## Building
 
 - Clone repository
-- `TZ=CET go test` # optional
-- `go build`
+- `make test` # optional
+- `make`

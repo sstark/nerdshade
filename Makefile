@@ -4,7 +4,7 @@ build:
 	go build
 
 test:
-	go test
+	TZ=CET go test
 
 tag-release:
 	git tag -a -s -m $(versionstr) $(versionstr)
