@@ -7,39 +7,38 @@ import (
 	"log/slog"
 	"math"
 	"os"
-	"os/signal"
 	"syscall"
 	"time"
 )
 
 type Config struct {
-	Debug       bool
-	Help        bool
-	NightTemp   int
-	DayTemp     int
-	NightGamma  int
-	DayGamma    int
-	Latitude    float64
-	Longitude   float64
-	Wakeup      string
-	Bedtime     string
-	WakeupTime  time.Time
-	BedtimeTime time.Time
-	Loop        bool
-	Version     bool
-	HyprctlCmd  string
+	Debug              bool
+	Help               bool
+	NightTemp          int
+	DayTemp            int
+	NightGamma         int
+	DayGamma           int
+	Latitude           float64
+	Longitude          float64
+	Wakeup             string
+	Bedtime            string
+	WakeupTime         time.Time
+	BedtimeTime        time.Time
+	Loop               bool
+	Version            bool
+	HyprctlCmd         string
 	TransitionDuration time.Duration
 }
 
 const (
-	DefaultLatitude     = 48.516
-	DefaultLongitude    = 9.120
-	DefaultNightTemp    = 4000
-	DefaultDayTemp      = 6500
-	DefaultNightGamma   = 90
-	DefaultDayGamma     = 100
-	DefaultLoopInterval = time.Second * 30
-	DefaultTransitionDuration  = time.Hour
+	DefaultLatitude           = 48.516
+	DefaultLongitude          = 9.120
+	DefaultNightTemp          = 4000
+	DefaultDayTemp            = 6500
+	DefaultNightGamma         = 90
+	DefaultDayGamma           = 100
+	DefaultLoopInterval       = time.Second * 30
+	DefaultTransitionDuration = time.Hour
 )
 
 // roundFloat rounds a float to the given precision
@@ -101,34 +100,6 @@ func GetFlags() (Config, error) {
 	return c, nil
 }
 
-func MainLoop(cflags Config, cl clock) {
-	slog.Info("running continuously")
-	sigc := make(chan os.Signal, 1)
-	signal.Notify(sigc, syscall.SIGTERM)
-	signal.Notify(sigc, syscall.SIGINT)
-	ticker := time.NewTicker(DefaultLoopInterval)
-	slog.Debug("loop timing", "interval", DefaultLoopInterval)
-	quit := make(chan bool)
-	GetAndSetBrightness(cflags, cl.Now())
-	for {
-		select {
-		case <-ticker.C:
-			// TODO: use ticker.Reset(interval) here to dynamically adjust ticker
-			// interval. We only need to wake up when needed.
-			// GetAndSetBrightness could simply return a time.Duration until the next
-			// expected change.
-			GetAndSetBrightness(cflags, cl.Now())
-		case sig := <-sigc:
-			slog.Debug("main loop received signal", "signal", sig)
-			go func() { quit <- true }()
-		case <-quit:
-			ticker.Stop()
-			slog.Debug("main loop quit")
-			return
-		}
-	}
-}
-
 func main() {
 	cflags, err := GetFlags()
 	if cflags.Version {
@@ -146,9 +117,13 @@ func main() {
 	now := cl.Now()
 	// TODO: Factor out to a function that returns a useful value to the OS.
 	slog.Debug("starting", "localtime", now)
+	GetAndSetBrightness(cflags, now)
 	if cflags.Loop {
-		MainLoop(cflags, cl)
-	} else {
-		GetAndSetBrightness(cflags, now)
+		repeatUntilInterrupt(func() {
+			GetAndSetBrightness(cflags, now)
+		},
+			DefaultLoopInterval,
+			syscall.SIGINT,
+			syscall.SIGTERM)
 	}
 }

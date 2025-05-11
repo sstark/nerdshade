@@ -68,7 +68,7 @@ func GetLocalBrightness(when time.Time, latitude, longitude float64, transitionD
 	return BrightnessLevel(when, rise.Local(), set.Local(), transitionDuration)
 }
 
-// GetScheduledBrightness( returns the current brightness based on hard schedule
+// GetScheduledBrightness returns the current brightness based on hard schedule
 // wakeup and bedtime values will be parsed and date-completed.
 func GetScheduledBrightness(when time.Time, wakeup, bedtime string, transitionDuration time.Duration) (float64, error) {
 	wakeupHour, wakeupMinute, err := ParseHourMinute(wakeup)
