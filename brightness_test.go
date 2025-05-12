@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -166,6 +167,89 @@ func TestParseHourMinute(t *testing.T) {
 			}
 			if (err != nil) != test.expected_err {
 				t.Errorf("Error expected? (%v) but got %v", test.expected_err, err)
+			}
+		})
+	}
+}
+
+type ScheduledBrightnessLevelTestCase struct {
+	t        time.Time
+	wakeup   string
+	bedtime  string
+	expected float64
+	err      error
+}
+
+func TestGetScheduledBrightness(t *testing.T) {
+	tests := map[string]ScheduledBrightnessLevelTestCase{
+		"Before wakeup": {
+			time.Date(2025, time.April, 15, 7, 27, 0, 0, time.Local),
+			"10:00",
+			"22:00",
+			0.0,
+			nil,
+		},
+		"In the middle of wakeup": {
+			time.Date(2025, time.April, 15, 8, 30, 0, 0, time.Local),
+			"8:00",
+			"22:00",
+			0.500,
+			nil,
+		},
+		"Towards the end of wakeup": {
+			time.Date(2025, time.April, 14, 8, 55, 0, 0, time.Local),
+			"8:00",
+			"22:59",
+			0.917,
+			nil,
+		},
+		"Right before bedtime": {
+			time.Date(2025, time.April, 14, 20, 11, 0, 0, time.Local),
+			"7:00",
+			"21:30",
+			1.0,
+			nil,
+		},
+		"In the middle of bedtime": {
+			time.Date(2025, time.April, 15, 20, 14, 0, 0, time.Local),
+			"7:21",
+			"20:45",
+			0.517,
+			nil,
+		},
+		"After bedtime": {
+			time.Date(2025, time.April, 16, 23, 15, 0, 0, time.Local),
+			"6:30",
+			"21:00",
+			0.0,
+			nil,
+		},
+		"After bedtime with bedtime parsing error": {
+			time.Date(2025, time.April, 16, 23, 15, 0, 0, time.Local),
+			"6:30",
+			"21:70",
+			0.0,
+			errors.New("Minute value (70) must be >=0 and <=59"),
+		},
+		"After bedtime with wakeup parsing error": {
+			time.Date(2025, time.April, 16, 23, 15, 0, 0, time.Local),
+			"630",
+			"21:10",
+			0.0,
+			errors.New("Time value malformed, needs to be of the form \"HH:MM\""),
+		},
+	}
+	for label, test := range tests {
+		t.Run(label, func(t *testing.T) {
+			result, err := GetScheduledBrightness(test.t, test.wakeup, test.bedtime, time.Hour)
+			if result != test.expected {
+				// Additional logging to make it easier to spot rounding issues
+				t.Log(result)
+				t.Log(test.expected)
+				t.Errorf("Brightness level %f not equal to expected %f", result, test.expected)
+			}
+			if err != nil && err.Error() != test.err.Error() {
+				t.Errorf("Error expected? (%v) but got %v", test.err, err)
 			}
 		})
 	}
