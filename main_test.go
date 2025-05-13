@@ -1,9 +1,11 @@
 package main
 
 import (
+	"flag"
 	"io"
 	"log/slog"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 )
@@ -109,4 +111,16 @@ func TestBothOrNone(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetFlags(t *testing.T) {
+	t.Run("help is shown", func(t *testing.T) {
+		_, output, err := GetFlags("foo", []string{"--help"})
+		if err != flag.ErrHelp {
+			t.Errorf("Help err wrong. Got %v instead of %v", err, flag.ErrHelp)
+		}
+		if !strings.HasPrefix(output, "Usage of foo") {
+			t.Errorf("Help output wrong. Got\n%v instead of\n%v", output, "Usage of foo")
+		}
+	})
 }

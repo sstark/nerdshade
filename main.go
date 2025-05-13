@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"flag"
 	"fmt"
@@ -78,30 +79,37 @@ func BothOrNone(a, b string) bool {
 }
 
 // GetFlags creates and returns a new config object from command line flags
-func GetFlags() (Config, error) {
+func GetFlags(progname string, args []string) (Config, string, error) {
 	c := Config{}
-	flag.BoolVar(&(c.Debug), "debug", false, "Print debug info")
-	flag.IntVar(&(c.NightTemp), "tempNight", DefaultNightTemp, "Night color temperature")
-	flag.IntVar(&(c.DayTemp), "tempDay", DefaultDayTemp, "Day color temperature")
-	flag.IntVar(&(c.NightGamma), "gammaNight", DefaultNightGamma, "Night gamma")
-	flag.IntVar(&(c.DayGamma), "gammaDay", DefaultDayGamma, "Day gamma")
-	flag.Float64Var(&(c.Latitude), "latitude", DefaultLatitude, "Your location latitude")
-	flag.Float64Var(&(c.Longitude), "longitude", DefaultLongitude, "Your location longitude")
-	flag.StringVar(&(c.Wakeup), "fixedWakeup", "", "Wakeup time in 24-hour format, e. g. \"6:00\" (overrides location)")
-	flag.StringVar(&(c.Bedtime), "fixedBedtime", "", "Bedtime time in 24-hour format, e. g. \"22:30\" (overrides location)")
-	flag.BoolVar(&(c.Loop), "loop", false, "Run nerdshade continuously")
-	flag.BoolVar(&(c.Version), "V", false, "Show program version")
-	flag.StringVar(&(c.HyprctlCmd), "hyperctl", HyprctlCmd, "Path to hyperctl program")
-	flag.DurationVar(&(c.TransitionDuration), "transitionDuration", DefaultTransitionDuration, "Duration of transition, e. g. \"45m\" or \"1h10m\"")
-	flag.Parse()
+	flags := flag.NewFlagSet(progname, flag.ContinueOnError)
+	var out bytes.Buffer
+	flags.SetOutput(&out)
+	flags.BoolVar(&(c.Debug), "debug", false, "Print debug info")
+	flags.IntVar(&(c.NightTemp), "tempNight", DefaultNightTemp, "Night color temperature")
+	flags.IntVar(&(c.DayTemp), "tempDay", DefaultDayTemp, "Day color temperature")
+	flags.IntVar(&(c.NightGamma), "gammaNight", DefaultNightGamma, "Night gamma")
+	flags.IntVar(&(c.DayGamma), "gammaDay", DefaultDayGamma, "Day gamma")
+	flags.Float64Var(&(c.Latitude), "latitude", DefaultLatitude, "Your location latitude")
+	flags.Float64Var(&(c.Longitude), "longitude", DefaultLongitude, "Your location longitude")
+	flags.StringVar(&(c.Wakeup), "fixedWakeup", "", "Wakeup time in 24-hour format, e. g. \"6:00\" (overrides location)")
+	flags.StringVar(&(c.Bedtime), "fixedBedtime", "", "Bedtime time in 24-hour format, e. g. \"22:30\" (overrides location)")
+	flags.BoolVar(&(c.Loop), "loop", false, "Run nerdshade continuously")
+	flags.BoolVar(&(c.Version), "V", false, "Show program version")
+	flags.StringVar(&(c.HyprctlCmd), "hyperctl", HyprctlCmd, "Path to hyperctl program")
+	flags.DurationVar(&(c.TransitionDuration), "transitionDuration", DefaultTransitionDuration, "Duration of transition, e. g. \"45m\" or \"1h10m\"")
+	err := flags.Parse(args)
 	if !BothOrNone(c.Wakeup, c.Bedtime) {
-		return c, errors.New("Both, -fixedBedtime and -fixedWakeup need to be supplied")
+		return c, out.String(), errors.New("Both, -fixedBedtime and -fixedWakeup need to be supplied")
 	}
-	return c, nil
+	return c, out.String(), err
 }
 
 func main() {
-	cflags, err := GetFlags()
+	cflags, flagsOut, err := GetFlags(os.Args[0], os.Args[1:])
+	if err == flag.ErrHelp {
+		fmt.Println(flagsOut)
+		os.Exit(0)
+	}
 	if cflags.Version {
 		fmt.Println(Version)
 		os.Exit(0)
