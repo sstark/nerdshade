@@ -38,10 +38,9 @@ func TestRepeatUntilInterrupt(t *testing.T) {
 		t.Run(fmt.Sprintf("%d/%d", test.totalRuntime, test.interval), func(t *testing.T) {
 			var called []string
 			// Kill ourselves after totalRuntime
-			go func() {
-				time.Sleep(time.Duration(test.totalRuntime) * time.Millisecond)
+			time.AfterFunc(time.Duration(test.totalRuntime)*time.Millisecond, func() {
 				syscall.Kill(syscall.Getpid(), syscall.SIGINT)
-			}()
+			})
 
 			repeatUntilInterrupt(func() {
 				called = append(called, "called")
