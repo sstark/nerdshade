@@ -123,4 +123,18 @@ func TestGetFlags(t *testing.T) {
 			t.Errorf("Help output wrong. Got\n%v instead of\n%v", output, "Usage of foo")
 		}
 	})
+
+	t.Run("wakeup/bedtime are used together (unhappy case)", func(t *testing.T) {
+		_, _, err := GetFlags("foo", []string{"-fixedWakeup", "10:00"})
+		if err.Error() != "Both, -fixedBedtime and -fixedWakeup need to be supplied" {
+			t.Errorf("Got %v instead of %v", err, "")
+		}
+	})
+
+	t.Run("wakeup/bedtime are used together (happy case)", func(t *testing.T) {
+		_, _, err := GetFlags("foo", []string{"-fixedWakeup", "10:00", "-fixedBedtime", "22:00"})
+		if err != nil {
+			t.Errorf("Got %v instead of nil", err)
+		}
+	})
 }
