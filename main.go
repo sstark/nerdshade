@@ -104,6 +104,18 @@ func GetFlags(progname string, args []string) (Config, string, error) {
 	return c, out.String(), err
 }
 
+func mainLoop(cflags Config) int {
+	slog.Debug("starting", "localtime", time.Now())
+	doit := func() {
+		GetAndSetBrightness(cflags, time.Now())
+	}
+	doit()
+	if cflags.Loop {
+		repeatUntilInterrupt(doit, DefaultLoopInterval, syscall.SIGINT, syscall.SIGTERM)
+	}
+	return 0
+}
+
 func main() {
 	cflags, flagsOut, err := GetFlags(os.Args[0], os.Args[1:])
 	if err == flag.ErrHelp {
@@ -121,15 +133,5 @@ func main() {
 		slog.Error("Error in flags", "error", err)
 		os.Exit(1)
 	}
-	// TODO: Factor out to a function that returns a useful value to the OS.
-	slog.Debug("starting", "localtime", time.Now())
-	GetAndSetBrightness(cflags, time.Now())
-	if cflags.Loop {
-		repeatUntilInterrupt(func() {
-			GetAndSetBrightness(cflags, time.Now())
-		},
-			DefaultLoopInterval,
-			syscall.SIGINT,
-			syscall.SIGTERM)
-	}
+	os.Exit(mainLoop(cflags))
 }
