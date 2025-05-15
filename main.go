@@ -121,8 +121,7 @@ func main() {
 		slog.Error("Error in flags", "error", err)
 		os.Exit(1)
 	}
-	cl := new(realClock)
-	now := cl.Now()
+	now := time.Now()
 	// TODO: Factor out to a function that returns a useful value to the OS.
 	slog.Debug("starting", "localtime", now)
 	GetAndSetBrightness(cflags, now)

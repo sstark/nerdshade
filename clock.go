@@ -7,33 +7,6 @@ import (
 	"time"
 )
 
-type clock interface {
-	Now() time.Time
-}
-
-type realClock struct{}
-
-func (realClock) Now() time.Time {
-	return time.Now()
-}
-
-type skewClock struct {
-	skew time.Duration
-}
-
-func (cl *skewClock) Now() time.Time {
-	return time.Now().Add(-cl.skew)
-}
-
-func newSkewClock(i int64) *skewClock {
-	d := time.Now().Sub(time.Unix(i, 0))
-	return &skewClock{skew: d}
-}
-
-func (cl *skewClock) forward(d time.Duration) {
-	cl.skew -= d
-}
-
 // repeatUntilInterrupt runs the given function every interval.
 // It will return whenever one of the signals in interruptSignals is received.
 func repeatUntilInterrupt(callback func(), interval time.Duration, interruptSignals ...os.Signal) {
