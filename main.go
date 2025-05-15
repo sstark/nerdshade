@@ -121,13 +121,12 @@ func main() {
 		slog.Error("Error in flags", "error", err)
 		os.Exit(1)
 	}
-	now := time.Now()
 	// TODO: Factor out to a function that returns a useful value to the OS.
-	slog.Debug("starting", "localtime", now)
-	GetAndSetBrightness(cflags, now)
+	slog.Debug("starting", "localtime", time.Now())
+	GetAndSetBrightness(cflags, time.Now())
 	if cflags.Loop {
 		repeatUntilInterrupt(func() {
-			GetAndSetBrightness(cflags, now)
+			GetAndSetBrightness(cflags, time.Now())
 		},
 			DefaultLoopInterval,
 			syscall.SIGINT,
