@@ -238,6 +238,20 @@ func TestGetScheduledBrightness(t *testing.T) {
 			0.0,
 			errors.New("Time value malformed, needs to be of the form \"HH:MM\""),
 		},
+		"Wrong hour format": {
+			time.Date(2025, time.April, 16, 23, 15, 0, 0, time.Local),
+			"9:00",
+			"ab:00",
+			0.0,
+			errors.New("strconv.Atoi: parsing \"ab\": invalid syntax"),
+		},
+		"Wrong minute format": {
+			time.Date(2025, time.April, 16, 23, 15, 0, 0, time.Local),
+			"9:00",
+			"21:cd",
+			0.0,
+			errors.New("strconv.Atoi: parsing \"cd\": invalid syntax"),
+		},
 	}
 	for label, test := range tests {
 		t.Run(label, func(t *testing.T) {
