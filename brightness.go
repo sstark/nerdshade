@@ -49,16 +49,23 @@ func ParseHourMinute(hourMinute string) (hour int, minute int, err error) {
 	if err != nil {
 		return
 	}
-	if hour < 0 || hour > 23 {
-		err = fmt.Errorf("Hour value (%d) must be >=0 and <=23", hour)
+	err = isBetween(hour, 0, 23)
+	if err != nil {
 		return
 	}
-	if minute < 0 || minute > 59 {
-		err = fmt.Errorf("Minute value (%d) must be >=0 and <=59", minute)
+	err = isBetween(minute, 0, 59)
+	if err != nil {
 		return
 	}
 	slog.Debug("parsed hour/minute", "hour", hour, "minute", minute)
 	return
+}
+
+func isBetween(val, low, high int) error {
+	if val < low || val > high {
+		return fmt.Errorf("Value (%d) must be >=%d and <=%d", val, low, high)
+	}
+	return nil
 }
 
 // GetLocalBrightness returns the current brightness at given location

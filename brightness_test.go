@@ -229,7 +229,7 @@ func TestGetScheduledBrightness(t *testing.T) {
 			"6:30",
 			"21:70",
 			0.0,
-			errors.New("Minute value (70) must be >=0 and <=59"),
+			errors.New("Value (70) must be >=0 and <=59"),
 		},
 		"After bedtime with wakeup parsing error": {
 			time.Date(2025, time.April, 16, 23, 15, 0, 0, time.Local),
