@@ -2,17 +2,15 @@ package main
 
 import (
 	"flag"
-	"io"
-	"log/slog"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
 )
 
-func TestMain(t *testing.T) {
-	slog.SetDefault(slog.New(slog.NewTextHandler(io.Discard, nil)))
-}
+//func TestMain(t *testing.T) {
+//	slog.SetDefault(slog.New(slog.NewTextHandler(io.Discard, nil)))
+//}
 
 type roundFloatTestCase struct {
 	in        float64

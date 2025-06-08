@@ -13,6 +13,10 @@ Actual calculation of sunrise/sunset times is done by the [go-sunrise package](h
 
 Can be run in one-shot mode (default) or in a loop.
 
+If nerdshade runs in loop mode and the `acpi_listen` program could be found,
+nerdshade will immediately do an update when the laptop lid is opened. (This
+is still a bit experimental, feedback welcome)
+
 ## Usage
 
 ```
