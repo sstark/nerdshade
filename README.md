@@ -15,7 +15,7 @@ Can be run in one-shot mode (default) or in a loop.
 
 If nerdshade runs in loop mode and the `acpi_listen` program could be found,
 nerdshade will immediately do an update when the laptop lid is opened. (This
-is still a bit experimental, feedback welcome)
+is still a bit experimental, feedback is welcome)
 
 ## Usage
 
@@ -41,6 +41,8 @@ Usage of ./nerdshade:
         Your location longitude (default 9.12)
   -loop
         Run nerdshade continuously
+  -nologtime
+        Omit time from log output (e. g. when running as systemd unit)
   -tempDay int
         Day color temperature (default 6500)
   -tempNight int
@@ -74,3 +76,23 @@ Download the latest binary from releases, place it somwhere in `$PATH` and start
 - Clone repository
 - `make test` # optional
 - `make`
+
+## Running via systemd
+
+An example of how you can run nerdshade through systemd:
+
+```bash
+systemd-run --user -u nerdshade nerdshade -nologtime -loop
+```
+
+The main benefit is to have the log output available in the system journal. To see it run:
+
+```bash
+journalctl --user -f -u nerdshade
+```
+
+To stop:
+
+```bash
+systemctl --user stop nerdshade
+```
