@@ -14,6 +14,7 @@ import (
 
 type Config struct {
 	Debug              bool
+	NoLogTime          bool
 	Help               bool
 	NightTemp          int
 	DayTemp            int
@@ -64,7 +65,7 @@ func TimeRatio(from, to time.Time, dur time.Duration) float64 {
 	if to.Before(from) {
 		return 0.0
 	}
-	// to is out of bounds, but target is still reached
+	// `to` is out of bounds, but `target` is still reached
 	if to.After(from.Add(dur)) {
 		return 1.0
 	}
@@ -85,6 +86,7 @@ func GetFlags(progname string, args []string) (Config, string, error) {
 	var out bytes.Buffer
 	flags.SetOutput(&out)
 	flags.BoolVar(&(c.Debug), "debug", false, "Print debug info")
+	flags.BoolVar(&(c.NoLogTime), "nologtime", false, "Omit time from log output (e. g. when running as systemd unit)")
 	flags.IntVar(&(c.NightTemp), "tempNight", DefaultNightTemp, "Night color temperature")
 	flags.IntVar(&(c.DayTemp), "tempDay", DefaultDayTemp, "Day color temperature")
 	flags.IntVar(&(c.NightGamma), "gammaNight", DefaultNightGamma, "Night gamma")
@@ -99,7 +101,7 @@ func GetFlags(progname string, args []string) (Config, string, error) {
 	flags.DurationVar(&(c.TransitionDuration), "transitionDuration", DefaultTransitionDuration, "Duration of transition, e. g. \"45m\" or \"1h10m\"")
 	err := flags.Parse(args)
 	if !BothOrNone(c.Wakeup, c.Bedtime) {
-		return c, out.String(), errors.New("Both, -fixedBedtime and -fixedWakeup need to be supplied")
+		return c, out.String(), errors.New("both, -fixedBedtime and -fixedWakeup need to be supplied")
 	}
 	return c, out.String(), err
 }
@@ -118,7 +120,8 @@ func mainLoop(cflags Config) int {
 
 func main() {
 	cflags, flagsOut, err := GetFlags(os.Args[0], os.Args[1:])
-	if err == flag.ErrHelp {
+	debugLevel := slog.LevelInfo
+	if errors.Is(err, flag.ErrHelp) {
 		fmt.Println(flagsOut)
 		os.Exit(0)
 	}
@@ -127,7 +130,11 @@ func main() {
 		os.Exit(0)
 	}
 	if cflags.Debug {
-		slog.SetLogLoggerLevel(slog.LevelDebug)
+		debugLevel = slog.LevelDebug
+		slog.SetLogLoggerLevel(debugLevel)
+	}
+	if cflags.NoLogTime {
+		slog.SetDefault(slog.New(noTimeHandler(debugLevel)))
 	}
 	if err != nil {
 		slog.Error("Error in flags", "error", err)

@@ -124,7 +124,7 @@ func TestGetFlags(t *testing.T) {
 
 	t.Run("wakeup/bedtime are used together (unhappy case)", func(t *testing.T) {
 		_, _, err := GetFlags("foo", []string{"-fixedWakeup", "10:00"})
-		if err.Error() != "Both, -fixedBedtime and -fixedWakeup need to be supplied" {
+		if err.Error() != "both, -fixedBedtime and -fixedWakeup need to be supplied" {
 			t.Errorf("Got %v instead of %v", err, "")
 		}
 	})
