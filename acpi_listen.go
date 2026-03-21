@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"os/exec"
+	"io"
 )
 
 // AcpiEvent returns a channel from which you can receive ACPI events
@@ -22,17 +23,21 @@ import (
 // AcpiEvent will create a goroutine that spawns an acpi_listen instance
 // and wait for output from it to fill the event channel.
 func AcpiEvent(cmdName string, watchedEvent string) (eventsOut chan string, err error) {
-	eventsOut = make(chan string, 100)
 	cmd := exec.Command(cmdName)
 	out, err := cmd.StdoutPipe()
 	if err != nil {
 		return nil, err
 	}
-	scanner := bufio.NewScanner(out)
 	err = cmd.Start()
 	if err != nil {
 		return nil, err
 	}
+	return acpiEventScanner(out, watchedEvent), err
+}
+
+func acpiEventScanner(cmdIo io.ReadCloser, watchedEvent string) (eventsOut chan string) {
+	eventsOut = make(chan string, 100)
+	scanner := bufio.NewScanner(cmdIo)
 	go func() {
 		for scanner.Scan() {
 			text := scanner.Text()
@@ -42,5 +47,5 @@ func AcpiEvent(cmdName string, watchedEvent string) (eventsOut chan string, err 
 			}
 		}
 	}()
-	return eventsOut, err
+	return eventsOut
 }
