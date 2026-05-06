@@ -103,7 +103,7 @@ func TestGetAndSetBrightness(t *testing.T) {
 	tests := map[string]TestGetAndSetBrightnessCase{
 		"OK case": {
 			MockHyprctl,
-			time.Date(2025, time.April, 16, 7, 25, 0, 0, time.Local),
+			time.Date(2025, time.April, 16, 5, 25, 0, 0, time.Local),
 			[]string{
 				"msg=\"local brightness\" brightness=0.9",
 				"msg=hyprctl subcmd=temperature stdout=\"ok\\n\"",
@@ -112,7 +112,7 @@ func TestGetAndSetBrightness(t *testing.T) {
 		},
 		"Not OK case": {
 			"./notexisting/binary",
-			time.Date(2025, time.April, 16, 7, 25, 0, 0, time.Local),
+			time.Date(2025, time.April, 16, 5, 25, 0, 0, time.Local),
 			[]string{
 				"level=WARN msg=hyprctl subcmd=temperature stderr=\"/bin/sh: ",
 				"level=WARN msg=\"error setting temperature\" err=\"exit status 127\"",

@@ -16,31 +16,31 @@ type BrightnessLevelTestCase struct {
 func TestBrightnessLevel(t *testing.T) {
 	tests := map[string]BrightnessLevelTestCase{
 		"Before sunset": {
-			time.Date(2025, time.April, 15, 17, 27, 0, 0, time.Local),
+			time.Date(2025, time.April, 15, 15, 27, 0, 0, time.Local),
 			1.0,
 		},
 		"In the middle of sunset": {
-			time.Date(2025, time.April, 15, 19, 30, 0, 0, time.Local),
+			time.Date(2025, time.April, 15, 17, 30, 0, 0, time.Local),
 			0.728,
 		},
 		"Towards the end of sunset": {
-			time.Date(2025, time.April, 14, 20, 5, 0, 0, time.Local),
+			time.Date(2025, time.April, 14, 18, 5, 0, 0, time.Local),
 			0.120,
 		},
 		"Right before end of sunset": {
-			time.Date(2025, time.April, 14, 20, 11, 0, 0, time.Local),
+			time.Date(2025, time.April, 14, 18, 11, 0, 0, time.Local),
 			0.020,
 		},
 		"Right after sunset": {
-			time.Date(2025, time.April, 15, 20, 14, 0, 0, time.Local),
+			time.Date(2025, time.April, 15, 18, 14, 0, 0, time.Local),
 			0.0,
 		},
 		"Right before sunrise": {
-			time.Date(2025, time.April, 16, 6, 15, 0, 0, time.Local),
+			time.Date(2025, time.April, 16, 4, 15, 0, 0, time.Local),
 			0.0,
 		},
 		"Sun has almost risen": {
-			time.Date(2025, time.April, 16, 7, 25, 0, 0, time.Local),
+			time.Date(2025, time.April, 16, 5, 25, 0, 0, time.Local),
 			0.900,
 		},
 	}
@@ -60,11 +60,11 @@ func TestBrightnessLevel(t *testing.T) {
 func TestGetLocalBrightness(t *testing.T) {
 	tests := map[string]BrightnessLevelTestCase{
 		"In the middle of sunset": {
-			time.Date(2025, time.April, 15, 19, 30, 0, 0, time.Local),
+			time.Date(2025, time.April, 15, 17, 30, 0, 0, time.Local),
 			0.728,
 		},
 		"Right after sunset": {
-			time.Date(2025, time.April, 15, 20, 14, 0, 0, time.Local),
+			time.Date(2025, time.April, 15, 18, 14, 0, 0, time.Local),
 			0.0,
 		},
 	}
