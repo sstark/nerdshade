@@ -61,7 +61,7 @@ func TestHyprctl(t *testing.T) {
 			"./notexisting/binary",
 			"foo",
 			123,
-			"subcmd=foo stderr=\"/bin/sh: ",
+			"subcmd=foo stderr=\"bash: line 1: ./notexisting/binary: No such file or directory\\n\"",
 			"exit status 127",
 		},
 	}
@@ -114,7 +114,7 @@ func TestGetAndSetBrightness(t *testing.T) {
 			"./notexisting/binary",
 			time.Date(2025, time.April, 16, 5, 25, 0, 0, time.Local),
 			[]string{
-				"level=WARN msg=hyprctl subcmd=temperature stderr=\"/bin/sh: ",
+				"level=WARN msg=hyprctl subcmd=temperature stderr=\"",
 				"level=WARN msg=\"error setting temperature\" err=\"exit status 127\"",
 				"level=WARN msg=\"error setting gamma\" err=\"exit status 127\"",
 			},
