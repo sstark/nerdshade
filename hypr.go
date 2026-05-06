@@ -16,7 +16,7 @@ const (
 func Shellout(command string) (string, string, error) {
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
-	cmd := exec.Command("/bin/sh", "-c", command)
+	cmd := exec.Command("/usr/bin/env", "bash", "-c", command)
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	err := cmd.Run()

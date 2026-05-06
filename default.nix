@@ -14,8 +14,8 @@ buildGoModule (finalAttrs: {
     owner = "sstark";
     repo = "nerdshade";
     # tag = "rel-${finalAttrs.version}";
-    rev = "pure-testing";
-    hash = "sha256-SQjkh1nQgWVcn30rYWnmh62suHzidZBh4fLJCueJWEU=";
+    rev = "55b173da471ab0d8d33b17a39b91e565b0128f2b";
+    hash = "sha256-YQ3K2nbuLi5e1ahWIGRLMwgc0R2FC4uLawd6VSwle1M=";
   };
 
   buildInputs = [ pkgs.bash ];
