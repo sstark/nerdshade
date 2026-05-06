@@ -8,10 +8,6 @@ import (
 	"time"
 )
 
-//func TestMain(t *testing.T) {
-//	slog.SetDefault(slog.New(slog.NewTextHandler(io.Discard, nil)))
-//}
-
 type roundFloatTestCase struct {
 	in        float64
 	precision uint
@@ -45,38 +41,38 @@ type TimeRatioTestCase struct {
 func TestTimeRatio(t *testing.T) {
 	tests := map[string]TimeRatioTestCase{
 		"Equal From To": {
-			time.Date(2025, time.April, 15, 17, 27, 0, 0, time.Local),
-			time.Date(2025, time.April, 15, 17, 27, 0, 0, time.Local),
+			time.Date(2025, time.April, 15, 17, 27, 0, 0, time.UTC),
+			time.Date(2025, time.April, 15, 17, 27, 0, 0, time.UTC),
 			time.Hour,
 			1.0,
 		},
 		"Exactly 100%": {
-			time.Date(2025, time.April, 15, 17, 27, 0, 0, time.Local),
-			time.Date(2025, time.April, 15, 18, 27, 0, 0, time.Local),
+			time.Date(2025, time.April, 15, 17, 27, 0, 0, time.UTC),
+			time.Date(2025, time.April, 15, 18, 27, 0, 0, time.UTC),
 			time.Hour,
 			0.0,
 		},
 		"Inside correct interval": {
-			time.Date(2025, time.April, 15, 17, 27, 0, 0, time.Local),
-			time.Date(2025, time.April, 15, 17, 58, 0, 0, time.Local),
+			time.Date(2025, time.April, 15, 17, 27, 0, 0, time.UTC),
+			time.Date(2025, time.April, 15, 17, 58, 0, 0, time.UTC),
 			time.Hour,
 			0.483,
 		},
 		"Same times, but longer reference interval": {
-			time.Date(2025, time.April, 15, 17, 27, 0, 0, time.Local),
-			time.Date(2025, time.April, 15, 17, 58, 0, 0, time.Local),
+			time.Date(2025, time.April, 15, 17, 27, 0, 0, time.UTC),
+			time.Date(2025, time.April, 15, 17, 58, 0, 0, time.UTC),
 			time.Hour * 2,
 			0.742,
 		},
 		"To is before From": {
-			time.Date(2025, time.April, 15, 17, 27, 0, 0, time.Local),
-			time.Date(2025, time.April, 15, 13, 12, 0, 0, time.Local),
+			time.Date(2025, time.April, 15, 17, 27, 0, 0, time.UTC),
+			time.Date(2025, time.April, 15, 13, 12, 0, 0, time.UTC),
 			time.Hour,
 			0.0,
 		},
 		"To is after From, but outside interval": {
-			time.Date(2025, time.April, 15, 17, 27, 0, 0, time.Local),
-			time.Date(2025, time.April, 15, 18, 46, 0, 0, time.Local),
+			time.Date(2025, time.April, 15, 17, 27, 0, 0, time.UTC),
+			time.Date(2025, time.April, 15, 18, 46, 0, 0, time.UTC),
 			time.Hour,
 			1.0,
 		},

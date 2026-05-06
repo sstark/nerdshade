@@ -1,41 +1,49 @@
 package main
 
 import (
-	"fmt"
+	"os"
 	"syscall"
 	"testing"
 	"time"
 )
 
-// On a very busy machine this test can be flaky
-func TestRepeatUntilInterrupt(t *testing.T) {
-	tests := []struct {
-		totalRuntime int
-		interval     int
-	}{
-		// For intervals < 10, notable delays happen too often on my machine
-		{80, 30},
-		{90, 40},
-		{70, 300}, // callback is never called
+func TestEventLoop(t *testing.T) {
+	ticks := make(chan time.Time)
+	sigc := make(chan os.Signal, 1)
+	acpiEvents := make(chan string, 10)
+	called := make(chan struct{}, 10)
+	done := make(chan struct{})
+
+	go func() {
+		eventLoop(func() { called <- struct{}{} }, ticks, sigc, acpiEvents)
+		close(done)
+	}()
+
+	expectCallback := func(reason string) {
+		t.Helper()
+		select {
+		case <-called:
+		case <-time.After(5 * time.Second):
+			t.Fatalf("callback was not called after %s", reason)
+		}
 	}
 
-	for _, test := range tests {
-		t.Run(fmt.Sprintf("%d/%d", test.totalRuntime, test.interval), func(t *testing.T) {
-			var called []string
-			// Kill ourselves after totalRuntime
-			time.AfterFunc(time.Duration(test.totalRuntime)*time.Millisecond, func() {
-				syscall.Kill(syscall.Getpid(), syscall.SIGINT)
-			})
+	ticks <- time.Now()
+	expectCallback("tick")
 
-			repeatUntilInterrupt(func() {
-				called = append(called, "called")
-			}, time.Duration(test.interval)*time.Millisecond, syscall.SIGINT)
+	acpiEvents <- acpiLidOpenEvent
+	expectCallback("acpi event")
 
-			expectedCalls := test.totalRuntime / test.interval
-			if len(called) != expectedCalls {
-				t.Errorf("callback was not called the correct number of times. Expected %v, got %v", expectedCalls, len(called))
-			}
+	sigc <- syscall.SIGINT
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		t.Fatal("eventLoop did not return after a signal")
+	}
 
-		})
+	select {
+	case <-called:
+		t.Error("callback was called for the signal")
+	default:
 	}
 }

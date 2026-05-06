@@ -12,6 +12,8 @@ const (
 	HyprctlCmd = "hyprctl"
 )
 
+var shellout = Shellout
+
 // Thanks https://stackoverflow.com/questions/6182369/exec-a-shell-command-in-go
 func Shellout(command string) (string, string, error) {
 	var stdout bytes.Buffer
@@ -29,7 +31,7 @@ func Hyprctl(cmd, subcmd string, val int) error {
 	// supplied with wrong arguments. In the hope this will change we still
 	// check properly.
 	slog.Debug("running hyprctl", subcmd, val)
-	stdout, stderr, err := Shellout(fmt.Sprintf("%s hyprsunset %s %d", cmd, subcmd, val))
+	stdout, stderr, err := shellout(fmt.Sprintf("%s hyprsunset %s %d", cmd, subcmd, val))
 	if stderr != "" {
 		slog.Warn("hyprctl", "subcmd", subcmd, "stderr", stderr)
 	}

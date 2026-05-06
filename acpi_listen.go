@@ -2,8 +2,8 @@ package main
 
 import (
 	"bufio"
-	"os/exec"
 	"io"
+	"os/exec"
 )
 
 // AcpiEvent returns a channel from which you can receive ACPI events

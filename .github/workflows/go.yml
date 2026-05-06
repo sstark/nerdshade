@@ -9,9 +9,6 @@ on:
   pull_request:
     branches: [ "main" ]
 
-env:
-  TZ: CET
-  
 jobs:
 
   build:

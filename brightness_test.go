@@ -16,31 +16,31 @@ type BrightnessLevelTestCase struct {
 func TestBrightnessLevel(t *testing.T) {
 	tests := map[string]BrightnessLevelTestCase{
 		"Before sunset": {
-			time.Date(2025, time.April, 15, 15, 27, 0, 0, time.Local),
+			time.Date(2025, time.April, 15, 15, 27, 0, 0, time.UTC),
 			1.0,
 		},
 		"In the middle of sunset": {
-			time.Date(2025, time.April, 15, 17, 30, 0, 0, time.Local),
+			time.Date(2025, time.April, 15, 17, 30, 0, 0, time.UTC),
 			0.728,
 		},
 		"Towards the end of sunset": {
-			time.Date(2025, time.April, 14, 18, 5, 0, 0, time.Local),
+			time.Date(2025, time.April, 14, 18, 5, 0, 0, time.UTC),
 			0.120,
 		},
 		"Right before end of sunset": {
-			time.Date(2025, time.April, 14, 18, 11, 0, 0, time.Local),
+			time.Date(2025, time.April, 14, 18, 11, 0, 0, time.UTC),
 			0.020,
 		},
 		"Right after sunset": {
-			time.Date(2025, time.April, 15, 18, 14, 0, 0, time.Local),
+			time.Date(2025, time.April, 15, 18, 14, 0, 0, time.UTC),
 			0.0,
 		},
 		"Right before sunrise": {
-			time.Date(2025, time.April, 16, 4, 15, 0, 0, time.Local),
+			time.Date(2025, time.April, 16, 4, 15, 0, 0, time.UTC),
 			0.0,
 		},
 		"Sun has almost risen": {
-			time.Date(2025, time.April, 16, 5, 25, 0, 0, time.Local),
+			time.Date(2025, time.April, 16, 5, 25, 0, 0, time.UTC),
 			0.900,
 		},
 	}
@@ -60,11 +60,11 @@ func TestBrightnessLevel(t *testing.T) {
 func TestGetLocalBrightness(t *testing.T) {
 	tests := map[string]BrightnessLevelTestCase{
 		"In the middle of sunset": {
-			time.Date(2025, time.April, 15, 17, 30, 0, 0, time.Local),
+			time.Date(2025, time.April, 15, 17, 30, 0, 0, time.UTC),
 			0.728,
 		},
 		"Right after sunset": {
-			time.Date(2025, time.April, 15, 18, 14, 0, 0, time.Local),
+			time.Date(2025, time.April, 15, 18, 14, 0, 0, time.UTC),
 			0.0,
 		},
 	}
@@ -183,70 +183,70 @@ type ScheduledBrightnessLevelTestCase struct {
 func TestGetScheduledBrightness(t *testing.T) {
 	tests := map[string]ScheduledBrightnessLevelTestCase{
 		"Before wakeup": {
-			time.Date(2025, time.April, 15, 7, 27, 0, 0, time.Local),
+			time.Date(2025, time.April, 15, 7, 27, 0, 0, time.UTC),
 			"10:00",
 			"22:00",
 			0.0,
 			nil,
 		},
 		"In the middle of wakeup": {
-			time.Date(2025, time.April, 15, 8, 30, 0, 0, time.Local),
+			time.Date(2025, time.April, 15, 8, 30, 0, 0, time.UTC),
 			"8:00",
 			"22:00",
 			0.500,
 			nil,
 		},
 		"Towards the end of wakeup": {
-			time.Date(2025, time.April, 14, 8, 55, 0, 0, time.Local),
+			time.Date(2025, time.April, 14, 8, 55, 0, 0, time.UTC),
 			"8:00",
 			"22:59",
 			0.917,
 			nil,
 		},
 		"Right before bedtime": {
-			time.Date(2025, time.April, 14, 20, 11, 0, 0, time.Local),
+			time.Date(2025, time.April, 14, 20, 11, 0, 0, time.UTC),
 			"7:00",
 			"21:30",
 			1.0,
 			nil,
 		},
 		"In the middle of bedtime": {
-			time.Date(2025, time.April, 15, 20, 14, 0, 0, time.Local),
+			time.Date(2025, time.April, 15, 20, 14, 0, 0, time.UTC),
 			"7:21",
 			"20:45",
 			0.517,
 			nil,
 		},
 		"After bedtime": {
-			time.Date(2025, time.April, 16, 23, 15, 0, 0, time.Local),
+			time.Date(2025, time.April, 16, 23, 15, 0, 0, time.UTC),
 			"6:30",
 			"21:00",
 			0.0,
 			nil,
 		},
 		"After bedtime with bedtime parsing error": {
-			time.Date(2025, time.April, 16, 23, 15, 0, 0, time.Local),
+			time.Date(2025, time.April, 16, 23, 15, 0, 0, time.UTC),
 			"6:30",
 			"21:70",
 			0.0,
 			errors.New("Value (70) must be >=0 and <=59"),
 		},
 		"After bedtime with wakeup parsing error": {
-			time.Date(2025, time.April, 16, 23, 15, 0, 0, time.Local),
+			time.Date(2025, time.April, 16, 23, 15, 0, 0, time.UTC),
 			"630",
 			"21:10",
 			0.0,
 			errors.New("Time value malformed, needs to be of the form \"HH:MM\""),
 		},
 		"Wrong hour format": {
-			time.Date(2025, time.April, 16, 23, 15, 0, 0, time.Local),
+			time.Date(2025, time.April, 16, 23, 15, 0, 0, time.UTC),
 			"9:00",
 			"ab:00",
 			0.0,
 			errors.New("strconv.Atoi: parsing \"ab\": invalid syntax"),
 		},
 		"Wrong minute format": {
-			time.Date(2025, time.April, 16, 23, 15, 0, 0, time.Local),
+			time.Date(2025, time.April, 16, 23, 15, 0, 0, time.UTC),
 			"9:00",
 			"21:cd",
 			0.0,
@@ -262,7 +262,9 @@ func TestGetScheduledBrightness(t *testing.T) {
 				t.Log(test.expected)
 				t.Errorf("Brightness level %f not equal to expected %f", result, test.expected)
 			}
-			if err != nil && err.Error() != test.err.Error() {
+			if (err == nil) != (test.err == nil) {
+				t.Errorf("Error expected? (%v) but got %v", test.err, err)
+			} else if err != nil && err.Error() != test.err.Error() {
 				t.Errorf("Error expected? (%v) but got %v", test.err, err)
 			}
 		})
