@@ -59,6 +59,38 @@ For example with `yay`:
 yay -S nerdshade
 ```
 
+## Installation via home-manager flake
+
+Add
+
+```
+nerdshade.url = "github:sstark/nerdshade/dev";
+```
+
+as an input in your `flake.nix`. Add it as `extraSpecialArgs` to your `homeManagerConfiguration`:
+
+```
+extraSpecialArgs = { inherit nerdshade; };
+```
+
+to make it available to your home manager modules. Then add the package to your package list:
+
+```
+home.packages = with pkgs; [
+  foo
+  bar
+] ++ [ nerdshade.packages.x86_64-linux.default ];
+```
+
+To try it out without installation you can use:
+
+```
+nix run github:sstark/nerdshade/dev -- --help
+```
+
+For above snippets, replace *dev* with a release tag, e. g. *1.3.0* if you do not want the current dev branch.
+
+
 ## Installation (Other)
 
 Make sure you have hyprsunset running.
