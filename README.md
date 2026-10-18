@@ -103,6 +103,24 @@ Download the latest binary from releases, place it somwhere in `$PATH` and start
 - `hyprctl keyword exec hyprsunset`    # if not yet running
 - `hyprctl keyword exec "nerdshade -loop"` # adjust
 
+
+## Configuration File
+
+Parameters may be defined via a configuration file in `$XDG_CONFIG_HOME/nerdshade.yaml` or `$HOME/.config/nerdshade.yaml`.
+
+Example `~/.config/nerdshade.yaml`:
+
+```
+latitude: 50.534
+longitude: 8.6
+tempnight: 4200
+```
+
+Command line parameters will take precedence over those from the configuration file.
+
+You *can* add `loop: true` to the configuration file, although it could be confusing.
+
+
 ## Building
 
 - Clone repository

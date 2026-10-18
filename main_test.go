@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
@@ -136,9 +137,10 @@ func TestGetFlags(t *testing.T) {
 
 func TestGetFlagsConfigFile(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	t.Chdir(t.TempDir())
+	xdg := t.TempDir()
+	t.Setenv("XDG_CONFIG_HOME", xdg)
 	config := []byte("tempNight: 3000\nfixedWakeup: \"6:30\"\nfixedBedtime: \"22:00\"\ntransitionDuration: 15m\nV: true\n")
-	if err := os.WriteFile("nerdshade.yaml", config, 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(xdg, "nerdshade.yaml"), config, 0o644); err != nil {
 		t.Fatalf("Could not write config file: %v", err)
 	}
 
@@ -171,6 +173,60 @@ func TestGetFlagsConfigFile(t *testing.T) {
 		}
 		if !c.GetBool(keyVersion) {
 			t.Error("Version should be settable on the command line")
+		}
+	})
+}
+
+func TestGetFlagsConfigPaths(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	homeConfig := filepath.Join(home, ".config")
+	xdg := t.TempDir()
+	writeConfig := func(t *testing.T, dir, tempNight string) {
+		t.Helper()
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			t.Fatalf("Could not create %s: %v", dir, err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, "nerdshade.yaml"), []byte("tempNight: "+tempNight+"\n"), 0o644); err != nil {
+			t.Fatalf("Could not write config file: %v", err)
+		}
+	}
+	getNightTemp := func(t *testing.T) int {
+		t.Helper()
+		c, _, err := GetFlags("foo", nil)
+		if err != nil {
+			t.Fatalf("Got %v instead of nil", err)
+		}
+		return c.GetInt(keyNightTemp)
+	}
+	writeConfig(t, homeConfig, "1111")
+	writeConfig(t, xdg, "2222")
+
+	t.Run("XDG_CONFIG_HOME wins over home config dir", func(t *testing.T) {
+		t.Setenv("XDG_CONFIG_HOME", xdg)
+		if got := getNightTemp(t); got != 2222 {
+			t.Errorf("Got %d instead of 2222", got)
+		}
+	})
+
+	t.Run("XDG_CONFIG_HOME replaces the home config dir", func(t *testing.T) {
+		t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+		if got := getNightTemp(t); got != DefaultNightTemp {
+			t.Errorf("Got %d instead of %d", got, DefaultNightTemp)
+		}
+	})
+
+	t.Run("relative XDG_CONFIG_HOME is ignored", func(t *testing.T) {
+		t.Setenv("XDG_CONFIG_HOME", "relative/dir")
+		if got := getNightTemp(t); got != 1111 {
+			t.Errorf("Got %d instead of 1111", got)
+		}
+	})
+
+	t.Run("home config dir is used when XDG_CONFIG_HOME is unset", func(t *testing.T) {
+		t.Setenv("XDG_CONFIG_HOME", "")
+		if got := getNightTemp(t); got != 1111 {
+			t.Errorf("Got %d instead of 1111", got)
 		}
 	})
 }

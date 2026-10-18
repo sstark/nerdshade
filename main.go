@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"math"
 	"os"
+	"path/filepath"
 	"syscall"
 	"time"
 
@@ -120,9 +121,11 @@ func GetFlags(progname string, args []string) (Config, string, error) {
 	flags.SetOutput(&out)
 	v := newConfig()
 	v.SetConfigName("nerdshade")
-	v.AddConfigPath("$HOME/.config")
-	v.AddConfigPath(".")
-	// ignore a missing config file
+	if xdg := os.Getenv("XDG_CONFIG_HOME"); xdg != "" && filepath.IsAbs(xdg) {
+		v.AddConfigPath(xdg)
+	} else {
+		v.AddConfigPath("$HOME/.config")
+	}
 	_ = v.ReadInConfig()
 	flags.BoolVar(&(f.Debug), keyDebug, v.GetBool(keyDebug), "Print debug info")
 	flags.BoolVar(&(f.NoLogTime), keyNoLogTime, v.GetBool(keyNoLogTime), "Omit time from log output (e. g. when running as systemd unit)")
@@ -175,6 +178,10 @@ func main() {
 	if cflags.GetBool(keyDebug) {
 		debugLevel = slog.LevelDebug
 		slog.SetLogLoggerLevel(debugLevel)
+		cfile := cflags.ConfigFileUsed()
+		if cfile != "" {
+			slog.Debug("using", "configfile", cfile)
+		}
 	}
 	if cflags.GetBool(keyNoLogTime) {
 		slog.SetDefault(slog.New(noTimeHandler(debugLevel)))
