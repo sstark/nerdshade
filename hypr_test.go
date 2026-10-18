@@ -177,15 +177,7 @@ func TestGetAndSetBrightness(t *testing.T) {
 			},
 		},
 	}
-	cflags := Config{}
-	cflags.HyprctlCmd = ""
-	cflags.Latitude = DefaultLatitude
-	cflags.Longitude = DefaultLongitude
-	cflags.DayGamma = DefaultDayGamma
-	cflags.NightGamma = DefaultNightGamma
-	cflags.DayTemp = DefaultDayTemp
-	cflags.NightTemp = DefaultNightTemp
-	cflags.TransitionDuration = DefaultTransitionDuration
+	cflags := newConfig()
 	for label, test := range tests {
 		t.Run(label, func(t *testing.T) {
 			logOutput := captureLogs(t)
@@ -194,7 +186,7 @@ func TestGetAndSetBrightness(t *testing.T) {
 				gotCommands = append(gotCommands, command)
 				return test.result
 			})
-			cflags.HyprctlCmd = test.cmd
+			cflags.Set(keyHyprctlCmd, test.cmd)
 
 			GetAndSetBrightness(cflags, test.when)
 

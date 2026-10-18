@@ -18,7 +18,7 @@
             pname = "nerdshade";
             version = "1.4.0";
             src = ./.;
-            vendorHash = "sha256-7Tdn5YBrsOORsHjlz1r9K/U3AtKdvu80+P3iU3+FXO8=";
+            vendorHash = "sha256-xDrdGCKnSP7EgrxqkiMFiwPG20dkOf3rer8lXegKKGo=";
             ldflags = [ "-s" ];
             meta = {
               description = "Hyprsunset client to smoothly transition color temperature during sunrise/sunset";

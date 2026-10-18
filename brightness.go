@@ -95,12 +95,14 @@ func GetScheduledBrightness(when time.Time, wakeup, bedtime string, transitionDu
 // GetBrightness returns the brightness based on either location or fixed schedule,
 // depending on which flags are present in cflags.
 func GetBrightness(cflags Config, when time.Time) (brightness float64, err error) {
-	if cflags.Wakeup != "" {
+	if cflags.GetString(keyFixedWakeup) != "" {
 		// Parameter -wakeup was supplied. User wants fixed times
-		brightness, err = GetScheduledBrightness(when, cflags.Wakeup, cflags.Bedtime, cflags.TransitionDuration)
+		brightness, err = GetScheduledBrightness(when, cflags.GetString(keyFixedWakeup),
+			cflags.GetString(keyFixedBedtime), cflags.GetDuration(keyTransitionDuration))
 		slog.Debug("scheduled brightness", "brightness", brightness)
 	} else {
-		brightness = GetLocalBrightness(when, cflags.Latitude, cflags.Longitude, cflags.TransitionDuration)
+		brightness = GetLocalBrightness(when, cflags.GetFloat64(keyLatitude),
+			cflags.GetFloat64(keyLongitude), cflags.GetDuration(keyTransitionDuration))
 		slog.Debug("local brightness", "brightness", brightness)
 	}
 	return

@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"os"
 	"strconv"
 	"strings"
 	"testing"
@@ -129,6 +130,47 @@ func TestGetFlags(t *testing.T) {
 		_, _, err := GetFlags("foo", []string{"-fixedWakeup", "10:00", "-fixedBedtime", "22:00"})
 		if err != nil {
 			t.Errorf("Got %v instead of nil", err)
+		}
+	})
+}
+
+func TestGetFlagsConfigFile(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Chdir(t.TempDir())
+	config := []byte("tempNight: 3000\nfixedWakeup: \"6:30\"\nfixedBedtime: \"22:00\"\ntransitionDuration: 15m\nV: true\n")
+	if err := os.WriteFile("nerdshade.yaml", config, 0o644); err != nil {
+		t.Fatalf("Could not write config file: %v", err)
+	}
+
+	t.Run("config file supplies defaults", func(t *testing.T) {
+		c, _, err := GetFlags("foo", nil)
+		if err != nil {
+			t.Fatalf("Got %v instead of nil", err)
+		}
+		if got := c.GetInt(keyNightTemp); got != 3000 {
+			t.Errorf("Got %d instead of 3000", got)
+		}
+		if got := c.GetString(keyFixedWakeup); got != "6:30" {
+			t.Errorf("Got %q instead of \"6:30\"", got)
+		}
+		if got := c.GetDuration(keyTransitionDuration); got != 15*time.Minute {
+			t.Errorf("Got %v instead of 15m", got)
+		}
+		if c.GetBool(keyVersion) {
+			t.Error("Version should not be settable from a config file")
+		}
+	})
+
+	t.Run("command line overrides config file", func(t *testing.T) {
+		c, _, err := GetFlags("foo", []string{"-tempNight", "5000", "-V"})
+		if err != nil {
+			t.Fatalf("Got %v instead of nil", err)
+		}
+		if got := c.GetInt(keyNightTemp); got != 5000 {
+			t.Errorf("Got %d instead of 5000", got)
+		}
+		if !c.GetBool(keyVersion) {
+			t.Error("Version should be settable on the command line")
 		}
 	})
 }

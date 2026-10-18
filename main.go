@@ -10,27 +10,29 @@ import (
 	"os"
 	"syscall"
 	"time"
+
+	"github.com/spf13/viper"
 )
 
-type Config struct {
-	Debug              bool
-	NoLogTime          bool
-	Help               bool
-	NightTemp          int
-	DayTemp            int
-	NightGamma         int
-	DayGamma           int
-	Latitude           float64
-	Longitude          float64
-	Wakeup             string
-	Bedtime            string
-	WakeupTime         time.Time
-	BedtimeTime        time.Time
-	Loop               bool
-	Version            bool
-	HyprctlCmd         string
-	TransitionDuration time.Duration
-}
+// Config is the viper instance that holds all configuration values.
+type Config = *viper.Viper
+
+const (
+	keyDebug              = "debug"
+	keyNoLogTime          = "nologtime"
+	keyNightTemp          = "tempNight"
+	keyDayTemp            = "tempDay"
+	keyNightGamma         = "gammaNight"
+	keyDayGamma           = "gammaDay"
+	keyLatitude           = "latitude"
+	keyLongitude          = "longitude"
+	keyFixedWakeup        = "fixedWakeup"
+	keyFixedBedtime       = "fixedBedtime"
+	keyLoop               = "loop"
+	keyVersion            = "V"
+	keyHyprctlCmd         = "hyperctl"
+	keyTransitionDuration = "transitionDuration"
+)
 
 const (
 	DefaultLatitude           = 48.516
@@ -42,6 +44,20 @@ const (
 	DefaultLoopInterval       = time.Second * 30
 	DefaultTransitionDuration = time.Hour
 )
+
+// newConfig returns a Config with all defaults set, without reading a config file.
+func newConfig() Config {
+	v := viper.New()
+	v.SetDefault(keyNightTemp, DefaultNightTemp)
+	v.SetDefault(keyDayTemp, DefaultDayTemp)
+	v.SetDefault(keyNightGamma, DefaultNightGamma)
+	v.SetDefault(keyDayGamma, DefaultDayGamma)
+	v.SetDefault(keyLatitude, DefaultLatitude)
+	v.SetDefault(keyLongitude, DefaultLongitude)
+	v.SetDefault(keyHyprctlCmd, HyprctlCmd)
+	v.SetDefault(keyTransitionDuration, DefaultTransitionDuration)
+	return v
+}
 
 // roundFloat rounds a float to the given precision
 func roundFloat(val float64, precision uint) float64 {
@@ -81,29 +97,56 @@ func BothOrNone(a, b string) bool {
 
 // GetFlags creates and returns a new config object from command line flags
 func GetFlags(progname string, args []string) (Config, string, error) {
-	c := Config{}
+	// Throwaway buffer, only there because the flag package needs storage for
+	// parsed values. The returned Config is the source of truth.
+	var f struct {
+		Debug              bool
+		NoLogTime          bool
+		NightTemp          int
+		DayTemp            int
+		NightGamma         int
+		DayGamma           int
+		Latitude           float64
+		Longitude          float64
+		Wakeup             string
+		Bedtime            string
+		Loop               bool
+		Version            bool
+		HyprctlCmd         string
+		TransitionDuration time.Duration
+	}
 	flags := flag.NewFlagSet(progname, flag.ContinueOnError)
 	var out bytes.Buffer
 	flags.SetOutput(&out)
-	flags.BoolVar(&(c.Debug), "debug", false, "Print debug info")
-	flags.BoolVar(&(c.NoLogTime), "nologtime", false, "Omit time from log output (e. g. when running as systemd unit)")
-	flags.IntVar(&(c.NightTemp), "tempNight", DefaultNightTemp, "Night color temperature")
-	flags.IntVar(&(c.DayTemp), "tempDay", DefaultDayTemp, "Day color temperature")
-	flags.IntVar(&(c.NightGamma), "gammaNight", DefaultNightGamma, "Night gamma")
-	flags.IntVar(&(c.DayGamma), "gammaDay", DefaultDayGamma, "Day gamma")
-	flags.Float64Var(&(c.Latitude), "latitude", DefaultLatitude, "Your location latitude")
-	flags.Float64Var(&(c.Longitude), "longitude", DefaultLongitude, "Your location longitude")
-	flags.StringVar(&(c.Wakeup), "fixedWakeup", "", "Wakeup time in 24-hour format, e. g. \"6:00\" (overrides location)")
-	flags.StringVar(&(c.Bedtime), "fixedBedtime", "", "Bedtime time in 24-hour format, e. g. \"22:30\" (overrides location)")
-	flags.BoolVar(&(c.Loop), "loop", false, "Run nerdshade continuously")
-	flags.BoolVar(&(c.Version), "V", false, "Show program version")
-	flags.StringVar(&(c.HyprctlCmd), "hyperctl", HyprctlCmd, "Path to hyperctl program")
-	flags.DurationVar(&(c.TransitionDuration), "transitionDuration", DefaultTransitionDuration, "Duration of transition, e. g. \"45m\" or \"1h10m\"")
+	v := newConfig()
+	v.SetConfigName("nerdshade")
+	v.AddConfigPath("$HOME/.config")
+	v.AddConfigPath(".")
+	// ignore a missing config file
+	_ = v.ReadInConfig()
+	flags.BoolVar(&(f.Debug), keyDebug, v.GetBool(keyDebug), "Print debug info")
+	flags.BoolVar(&(f.NoLogTime), keyNoLogTime, v.GetBool(keyNoLogTime), "Omit time from log output (e. g. when running as systemd unit)")
+	flags.IntVar(&(f.NightTemp), keyNightTemp, v.GetInt(keyNightTemp), "Night color temperature")
+	flags.IntVar(&(f.DayTemp), keyDayTemp, v.GetInt(keyDayTemp), "Day color temperature")
+	flags.IntVar(&(f.NightGamma), keyNightGamma, v.GetInt(keyNightGamma), "Night gamma")
+	flags.IntVar(&(f.DayGamma), keyDayGamma, v.GetInt(keyDayGamma), "Day gamma")
+	flags.Float64Var(&(f.Latitude), keyLatitude, v.GetFloat64(keyLatitude), "Your location latitude")
+	flags.Float64Var(&(f.Longitude), keyLongitude, v.GetFloat64(keyLongitude), "Your location longitude")
+	flags.StringVar(&(f.Wakeup), keyFixedWakeup, v.GetString(keyFixedWakeup), "Wakeup time in 24-hour format, e. g. \"6:00\" (overrides location)")
+	flags.StringVar(&(f.Bedtime), keyFixedBedtime, v.GetString(keyFixedBedtime), "Bedtime time in 24-hour format, e. g. \"22:30\" (overrides location)")
+	flags.BoolVar(&(f.Loop), keyLoop, v.GetBool(keyLoop), "Run nerdshade continuously")
+	flags.BoolVar(&(f.Version), keyVersion, false, "Show program version")
+	flags.StringVar(&(f.HyprctlCmd), keyHyprctlCmd, v.GetString(keyHyprctlCmd), "Path to hyperctl program")
+	flags.DurationVar(&(f.TransitionDuration), keyTransitionDuration, v.GetDuration(keyTransitionDuration), "Duration of transition, e. g. \"45m\" or \"1h10m\"")
 	err := flags.Parse(args)
-	if !BothOrNone(c.Wakeup, c.Bedtime) {
-		return c, out.String(), errors.New("both, -fixedBedtime and -fixedWakeup need to be supplied")
+	// Command line flags take precedence over the config file.
+	flags.Visit(func(fl *flag.Flag) { v.Set(fl.Name, fl.Value.String()) })
+	// -V only makes sense on the command line, never from a config file.
+	v.Set(keyVersion, f.Version)
+	if !BothOrNone(f.Wakeup, f.Bedtime) {
+		return v, out.String(), errors.New("both, -fixedBedtime and -fixedWakeup need to be supplied")
 	}
-	return c, out.String(), err
+	return v, out.String(), err
 }
 
 func mainLoop(cflags Config) int {
@@ -112,7 +155,7 @@ func mainLoop(cflags Config) int {
 		GetAndSetBrightness(cflags, time.Now())
 	}
 	doit()
-	if cflags.Loop {
+	if cflags.GetBool(keyLoop) {
 		repeatUntilInterrupt(doit, DefaultLoopInterval, syscall.SIGINT, syscall.SIGTERM)
 	}
 	return 0
@@ -125,15 +168,15 @@ func main() {
 		fmt.Println(flagsOut)
 		os.Exit(0)
 	}
-	if cflags.Version {
+	if cflags.GetBool(keyVersion) {
 		fmt.Println(Version)
 		os.Exit(0)
 	}
-	if cflags.Debug {
+	if cflags.GetBool(keyDebug) {
 		debugLevel = slog.LevelDebug
 		slog.SetLogLoggerLevel(debugLevel)
 	}
-	if cflags.NoLogTime {
+	if cflags.GetBool(keyNoLogTime) {
 		slog.SetDefault(slog.New(noTimeHandler(debugLevel)))
 	}
 	if err != nil {

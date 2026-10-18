@@ -41,12 +41,12 @@ func Hyprctl(cmd, subcmd string, val int) error {
 
 // SetHyprsunset contacts a running Hyprland session to set temperature
 func SetHyprsunsetTemperature(cflags Config, temperature int) error {
-	return Hyprctl(cflags.HyprctlCmd, "temperature", temperature)
+	return Hyprctl(cflags.GetString(keyHyprctlCmd), "temperature", temperature)
 }
 
 // SetHyprsunset contacts a running Hyprland session to set gamma
 func SetHyprsunsetGamma(cflags Config, gamma int) error {
-	return Hyprctl(cflags.HyprctlCmd, "gamma", gamma)
+	return Hyprctl(cflags.GetString(keyHyprctlCmd), "gamma", gamma)
 }
 
 // GetAndSetBrightness gets the brightness, gets scaled values for temperature
@@ -56,8 +56,8 @@ func GetAndSetBrightness(cflags Config, when time.Time) {
 	if err != nil {
 		slog.Warn("error getting brightness", "err", err)
 	}
-	newTemperature := ScaleBrightness(brightness, cflags.NightTemp, cflags.DayTemp)
-	newGamma := ScaleBrightness(brightness, cflags.NightGamma, cflags.DayGamma)
+	newTemperature := ScaleBrightness(brightness, cflags.GetInt(keyNightTemp), cflags.GetInt(keyDayTemp))
+	newGamma := ScaleBrightness(brightness, cflags.GetInt(keyNightGamma), cflags.GetInt(keyDayGamma))
 	err = SetHyprsunsetTemperature(cflags, newTemperature)
 	if err != nil {
 		slog.Warn("error setting temperature", "err", err)
