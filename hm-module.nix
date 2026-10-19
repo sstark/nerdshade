@@ -1,11 +1,15 @@
 { self }:
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, options, ... }:
 
 let
   inherit (lib)
     mkEnableOption mkIf mkOption types literalExpression;
   cfg = config.services.nerdshade;
   format = pkgs.formats.yaml { };
+  hyprsunsetSvc =
+    cfg.hyprsunsetPackage != null
+    && options ? services.hyprsunset
+    && config.services.hyprsunset.enable;
   settings =
     lib.optionalAttrs cfg.debug { debug = true; }
     // lib.filterAttrs (n: v: v != null) {
@@ -24,6 +28,19 @@ in
       default = self.packages.${pkgs.stdenv.hostPlatform.system}.default;
       defaultText = literalExpression "nerdshade.packages.${pkgs.stdenv.hostPlatform.system}.default";
       description = "The nerdshade package to use.";
+    };
+
+    hyprsunsetPackage = mkOption {
+      type = types.nullOr types.package;
+      default = pkgs.hyprsunset;
+      defaultText = literalExpression "pkgs.hyprsunset";
+      description = ''
+        The hyprsunset package to install. nerdshade only talks to a running
+        hyprsunset instance via hyprctl, so hyprsunset needs to be available
+        in the session (e. g. to start it with
+        {command}`hyprctl keyword exec hyprsunset`). Set to null if you
+        manage hyprsunset yourself.
+      '';
     };
 
     latitude = mkOption {
@@ -143,7 +160,8 @@ in
       }
     ];
 
-    home.packages = [ cfg.package ];
+    home.packages = [ cfg.package ]
+      ++ lib.optional (cfg.hyprsunsetPackage != null) cfg.hyprsunsetPackage;
 
     xdg.configFile."nerdshade.yaml" = mkIf (settings != { }) {
       source = format.generate "nerdshade.yaml" settings;
@@ -152,7 +170,9 @@ in
     systemd.user.services.nerdshade = mkIf cfg.systemd.enable {
       Unit = {
         Description = "nerdshade - hyprsunset brightness client";
-        After = [ "graphical-session.target" ];
+        After = [ "graphical-session.target" ]
+          ++ lib.optional hyprsunsetSvc "hyprsunset.service";
+        Wants = lib.optional hyprsunsetSvc "hyprsunset.service";
         PartOf = [ "graphical-session.target" ];
         ConditionEnvironment = "WAYLAND_DISPLAY";
       };
