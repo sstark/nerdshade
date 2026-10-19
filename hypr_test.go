@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"log/slog"
 	"strings"
 	"testing"
@@ -23,6 +24,17 @@ func stubShellout(t *testing.T, fn func(command string) shellResult) {
 		return result.stdout, result.stderr, result.err
 	}
 	t.Cleanup(func() { shellout = previous })
+}
+
+func stubSleep(t *testing.T) *[]time.Duration {
+	t.Helper()
+	previous := sleep
+	var slept []time.Duration
+	sleep = func(d time.Duration) {
+		slept = append(slept, d)
+	}
+	t.Cleanup(func() { sleep = previous })
+	return &slept
 }
 
 func captureLogs(t *testing.T) *bytes.Buffer {
@@ -102,13 +114,14 @@ func TestHyprctl(t *testing.T) {
 				stderr: "./notexisting/binary: No such file or directory\n",
 				err:    errors.New("exit status 127"),
 			},
-			wantLog: `stderr="./notexisting/binary: No such file or directory\n"`,
+			wantLog: `level=WARN msg="hyprctl still failing, giving up" subcmd=foo attempts=10 err="exit status 127"`,
 			errstr:  "exit status 127",
 		},
 	}
 	for label, test := range tests {
 		t.Run(label, func(t *testing.T) {
 			logOutput := captureLogs(t)
+			slept := stubSleep(t)
 			var gotCommand string
 			stubShellout(t, func(command string) shellResult {
 				gotCommand = command
@@ -119,6 +132,13 @@ func TestHyprctl(t *testing.T) {
 
 			if gotCommand != test.wantCommand {
 				t.Errorf("Got shell command %q instead of %q", gotCommand, test.wantCommand)
+			}
+			if test.errstr != "" {
+				if len(*slept) != hyprctlMaxAttempts-1 {
+					t.Errorf("Expected %d retries, got %d", hyprctlMaxAttempts-1, len(*slept))
+				}
+			} else if len(*slept) != 0 {
+				t.Errorf("Expected no retries, got %d", len(*slept))
 			}
 			got := logOutput.String()
 			if !strings.Contains(got, test.wantLog) {
@@ -133,6 +153,47 @@ func TestHyprctl(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestHyprctlRetriesUntilSuccess(t *testing.T) {
+	logOutput := captureLogs(t)
+	slept := stubSleep(t)
+	calls := 0
+	stubShellout(t, func(command string) shellResult {
+		calls++
+		if calls < 3 {
+			return shellResult{err: errors.New("exit status 1")}
+		}
+		return shellResult{stdout: "ok\n"}
+	})
+
+	err := Hyprctl("hyprctl", "temperature", 5000)
+
+	if err != nil {
+		t.Errorf("Expected no error after successful retry, got %v", err)
+	}
+	if calls != 3 {
+		t.Errorf("Expected 3 calls to hyprctl, got %d", calls)
+	}
+	if len(*slept) != 2 {
+		t.Errorf("Expected 2 sleeps, got %d", len(*slept))
+	}
+	for _, d := range *slept {
+		if d != hyprctlRetryInterval {
+			t.Errorf("Expected retry interval %v, got %v", hyprctlRetryInterval, d)
+		}
+	}
+	if got := logOutput.String(); strings.Contains(got, "giving up") {
+		t.Errorf("Expected no give up message, got: %s", got)
+	}
+}
+
+func commandsFor(cmd, subcmd string, value, n int) []string {
+	var commands []string
+	for i := 0; i < n; i++ {
+		commands = append(commands, fmt.Sprintf("%s hyprsunset %s %d", cmd, subcmd, value))
+	}
+	return commands
 }
 
 type TestGetAndSetBrightnessCase struct {
@@ -166,13 +227,16 @@ func TestGetAndSetBrightness(t *testing.T) {
 				stderr: "./notexisting/binary: No such file or directory\n",
 				err:    errors.New("exit status 127"),
 			},
-			wantCommands: []string{
-				"./notexisting/binary hyprsunset temperature 6250",
-				"./notexisting/binary hyprsunset gamma 99",
-			},
+			wantCommands: append(
+				commandsFor("./notexisting/binary", "temperature", 6250, hyprctlMaxAttempts),
+				commandsFor("./notexisting/binary", "gamma", 99, hyprctlMaxAttempts)...,
+			),
 			wantLogs: []string{
 				`level=WARN msg=hyprctl subcmd=temperature stderr="./notexisting/binary: No such file or directory\n"`,
+				`level=WARN msg="hyprctl still failing, giving up" subcmd=temperature attempts=10 err="exit status 127"`,
 				`level=WARN msg="error setting temperature" err="exit status 127"`,
+				`level=WARN msg=hyprctl subcmd=gamma stderr="./notexisting/binary: No such file or directory\n"`,
+				`level=WARN msg="hyprctl still failing, giving up" subcmd=gamma attempts=10 err="exit status 127"`,
 				`level=WARN msg="error setting gamma" err="exit status 127"`,
 			},
 		},
@@ -181,6 +245,7 @@ func TestGetAndSetBrightness(t *testing.T) {
 	for label, test := range tests {
 		t.Run(label, func(t *testing.T) {
 			logOutput := captureLogs(t)
+			stubSleep(t)
 			var gotCommands []string
 			stubShellout(t, func(command string) shellResult {
 				gotCommands = append(gotCommands, command)

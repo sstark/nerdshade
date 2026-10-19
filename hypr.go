@@ -9,10 +9,13 @@ import (
 )
 
 const (
-	HyprctlCmd = "hyprctl"
+	HyprctlCmd           = "hyprctl"
+	hyprctlMaxAttempts   = 10
+	hyprctlRetryInterval = time.Second
 )
 
 var shellout = Shellout
+var sleep = time.Sleep
 
 // Thanks https://stackoverflow.com/questions/6182369/exec-a-shell-command-in-go
 func Shellout(command string) (string, string, error) {
@@ -25,17 +28,30 @@ func Shellout(command string) (string, string, error) {
 	return stdout.String(), stderr.String(), err
 }
 
-// Hyprctl calls hyprctl to set either temperatur or gamma
+// Hyprctl calls hyprctl to set either temperatur or gamma. If hyprctl fails
+// (e.g. because Hyprland is not running yet), it retries up to
+// hyprctlMaxAttempts times, waiting hyprctlRetryInterval between attempts.
 func Hyprctl(cmd, subcmd string, val int) error {
 	// Unfortunately hyprctl will not write an error to stderr nor return != 0 if
 	// supplied with wrong arguments. In the hope this will change we still
 	// check properly.
 	slog.Debug("running hyprctl", subcmd, val)
-	stdout, stderr, err := shellout(fmt.Sprintf("%s hyprsunset %s %d", cmd, subcmd, val))
-	if stderr != "" {
-		slog.Warn("hyprctl", "subcmd", subcmd, "stderr", stderr)
+	var err error
+	for attempt := 1; attempt <= hyprctlMaxAttempts; attempt++ {
+		stdout, stderr, shellErr := shellout(fmt.Sprintf("%s hyprsunset %s %d", cmd, subcmd, val))
+		if stderr != "" {
+			slog.Warn("hyprctl", "subcmd", subcmd, "stderr", stderr)
+		}
+		slog.Debug("hyprctl", "subcmd", subcmd, "stdout", stdout)
+		if shellErr == nil {
+			return nil
+		}
+		err = shellErr
+		if attempt < hyprctlMaxAttempts {
+			sleep(hyprctlRetryInterval)
+		}
 	}
-	slog.Debug("hyprctl", "subcmd", subcmd, "stdout", stdout)
+	slog.Warn("hyprctl still failing, giving up", "subcmd", subcmd, "attempts", hyprctlMaxAttempts, "err", err)
 	return err
 }
 
