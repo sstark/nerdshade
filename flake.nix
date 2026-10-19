@@ -16,7 +16,7 @@
         {
           default = pkgs.buildGoModule {
             pname = "nerdshade";
-            version = "1.4.0";
+            version = "1.4.1";
             src = ./.;
             vendorHash = "sha256-xDrdGCKnSP7EgrxqkiMFiwPG20dkOf3rer8lXegKKGo=";
             ldflags = [ "-s" ];
