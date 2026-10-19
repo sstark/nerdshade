@@ -33,6 +33,8 @@
         build = self.packages.${system}.default;
       });
 
+      homeModules.default = import ./hm-module.nix { inherit self; };
+
       devShells = forAllSystems (system:
         let pkgs = nixpkgs.legacyPackages.${system}; in
         {

@@ -59,39 +59,59 @@ For example with `yay`:
 yay -S nerdshade
 ```
 
-## Installation via home-manager flake
+## Installation using Nix Home Manager Flake
 
 Add
 
 ```
-nerdshade.url = "github:sstark/nerdshade/dev";
+nerdshade.url = "github:sstark/nerdshade";
 ```
 
-as an input in your `flake.nix`. Add it as `extraSpecialArgs` to your `homeManagerConfiguration`:
+as an input in your `flake.nix` and import the home-manager module, e. g.:
 
-```
-extraSpecialArgs = { inherit nerdshade; };
+```nix
+homeConfigurations."you@host" = home-manager.lib.homeManagerConfiguration {
+  pkgs = nixpkgs.legacyPackages.x86_64-linux;
+  modules = [
+    nerdshade.homeModules.default
+    ./home.nix
+  ];
+};
 ```
 
-to make it available to your home manager modules. Then add the package to your package list:
+Then enable and configure it in your home-manager module:
 
+```nix
+services.nerdshade = {
+  enable = true;
+  latitude = 50.534;
+  longitude = 8.6;
+  tempNight = 4200;
+};
 ```
-home.packages = with pkgs; [
-  foo
-  bar
-] ++ [ nerdshade.packages.x86_64-linux.default ];
-```
+
+This installs the package, writes the settings to
+`$XDG_CONFIG_HOME/nerdshade.yaml` and runs nerdshade in loop mode via a
+systemd user service. Set `services.nerdshade.systemd.enable = false` if you
+do not want the service, or use `services.nerdshade.systemd.extraArgs` to
+pass additional command-line arguments. All command line options are available
+as module options. See `hm-module.nix` for the full list.
+
+### Try without Installation
 
 To try it out without installation you can use:
 
 ```
-nix run github:sstark/nerdshade/dev -- --help
+nix run github:sstark/nerdshade -- --help
 ```
 
-For above snippets, replace *dev* with a release tag, e. g. *1.3.0* if you do not want the current dev branch.
+You can easily try the dev version this way:
 
+```
+nix run github:sstark/nerdshade/dev -- --help    
+```
 
-## Installation (Other)
+## Manual Installation
 
 Make sure you have hyprsunset running.
 
