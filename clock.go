@@ -22,7 +22,10 @@ func repeatUntilInterrupt(callback func(), interval time.Duration, interruptSign
 	sigc := make(chan os.Signal, 1)
 	signal.Notify(sigc, interruptSignals...)
 	defer signal.Stop(sigc)
-	acpiEvent, acpiErr := AcpiEvent(acpiListenCmd, acpiLidOpenEvent)
+	acpiEvent, acpiStop, acpiErr := AcpiEvent(acpiListenCmd, acpiLidOpenEvent)
+	if acpiStop != nil {
+		defer acpiStop()
+	}
 	if acpiErr != nil {
 		slog.Warn("ACPI event listener could not be started", "error", acpiErr)
 	}

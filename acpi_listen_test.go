@@ -23,7 +23,7 @@ wmi PNP0C14:05 000000d0 00000000
 
 func TestAcpiEventScanner(t *testing.T) {
 	reader := io.NopCloser(strings.NewReader(mockAcpiEvents))
-	acpiChan := acpiEventScanner(reader, acpiLidOpenEvent)
+	acpiChan := acpiEventScanner(nil, reader, acpiLidOpenEvent)
 	event := <-acpiChan
 
 	if event != acpiLidOpenEvent {

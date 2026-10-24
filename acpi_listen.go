@@ -22,28 +22,40 @@ import (
 // the same format as the filter argument.
 // AcpiEvent will create a goroutine that spawns an acpi_listen instance
 // and wait for output from it to fill the event channel.
-func AcpiEvent(cmdName string, watchedEvent string) (eventsOut chan string, err error) {
+func AcpiEvent(cmdName string, watchedEvent string) (eventsOut chan string, stop func(), err error) {
 	cmd := exec.Command(cmdName)
 	out, err := cmd.StdoutPipe()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	err = cmd.Start()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return acpiEventScanner(out, watchedEvent), err
+	stop = func() {
+		if cmd.Process != nil {
+			_ = cmd.Process.Kill()
+		}
+		_ = cmd.Wait()
+		_ = out.Close()
+	}
+	return acpiEventScanner(cmd, out, watchedEvent), stop, nil
 }
 
-func acpiEventScanner(cmdIo io.ReadCloser, watchedEvent string) (eventsOut chan string) {
+func acpiEventScanner(cmd *exec.Cmd, cmdIo io.ReadCloser, watchedEvent string) (eventsOut chan string) {
 	eventsOut = make(chan string, 100)
 	scanner := bufio.NewScanner(cmdIo)
 	go func() {
+		defer func() {
+			_ = cmdIo.Close()
+			if cmd != nil {
+				_ = cmd.Wait()
+			}
+		}()
 		for scanner.Scan() {
 			text := scanner.Text()
 			if text == watchedEvent || watchedEvent == "" {
-				line := scanner.Text()
-				eventsOut <- line
+				eventsOut <- text
 			}
 		}
 	}()
